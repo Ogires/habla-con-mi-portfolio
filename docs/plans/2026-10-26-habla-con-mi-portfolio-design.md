@@ -38,7 +38,7 @@ Es la pieza que cierra el arco técnico de la factoría: texto (Excusotron), per
 
 ## 3. Arquitectura
 
-Un único Cloudflare Worker con `assets` (patrón de la factoría) en `webninja.fyi` (`www.webninja.fyi` redirige a la raíz) con `custom_domain` y `workers_dev: true` (lección 8). Hexagonal ligera: el dominio habla con interfaces (`Embedder`, `BuscadorVectorial`, `BuscadorTexto`, `LlmProvider`, `Contador`).
+Un único Cloudflare Worker con `assets` (patrón de la factoría) en `webninja.fyi` (`www.webninja.fyi` redirige a la raíz) con `custom_domain` y `workers_dev: true` (lección 8). Los assets van con `run_worker_first: true`: el Worker ve todas las peticiones para hacer la redirección de `www` y poner las cabeceras de seguridad también en los estáticos. Hexagonal ligera: el dominio habla con interfaces (`Embedder`, `BuscadorVectorial`, `BuscadorTexto`, `LlmProvider`, `Contador`).
 
 ```
 ┌──────────────── Navegador (vanilla, sin build) ─────────────────┐

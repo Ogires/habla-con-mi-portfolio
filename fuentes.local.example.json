@@ -1,0 +1,18 @@
+{
+  "permitidos": [],
+  "fuentes": [
+    {
+      "id": "perfil",
+      "tipo": "perfil",
+      "titulo": "Perfil de LinkedIn",
+      "ruta": "<RUTA-TEXTOS-PERFIL.md>",
+      "url": "<URL-PERFIL>",
+      "incluir": ["Titular", "Principales aptitudes", "Acerca de: español", "Experiencia actual: español", "Proyectos"]
+    },
+    { "id": "cv", "tipo": "cv", "titulo": "CV", "ruta": "<RUTA-CV-PUBLICO>", "url": "<URL-PERFIL>" },
+    { "id": "post-excusotron", "tipo": "post", "titulo": "Post de LinkedIn · Excusotron", "modo": "post", "ruta": "<RUTA-GUIA-O-POST.md>", "url": "<URL-POST-O-PERFIL>" },
+    { "id": "post-frikile", "tipo": "post", "titulo": "Post de LinkedIn · Frikile", "modo": "post", "ruta": "<RUTA-GUIA-O-POST.md>", "url": "<URL-POST-O-PERFIL>" },
+    { "id": "post-ifc", "tipo": "post", "titulo": "Post de LinkedIn · Interview Fight Club", "modo": "post", "ruta": "<RUTA-GUIA-O-POST.md>", "url": "<URL-POST-O-PERFIL>" },
+    { "id": "post-last-listened", "tipo": "post", "titulo": "Post de LinkedIn · Last listened for NotebookLM", "modo": "post", "ruta": "<RUTA-GUIA-O-POST.md>", "url": "<URL-POST-O-PERFIL>" }
+  ]
+}

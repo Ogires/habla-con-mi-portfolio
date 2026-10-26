@@ -1,0 +1,8 @@
+{
+  "repos": [
+    { "repo": "Ogires/excusotron", "titulo": "Excusotron 3000", "ficheros": ["README.md", "docs/plans/2026-10-19-excusotron-design.md"] },
+    { "repo": "Ogires/frikile", "titulo": "Frikile", "ficheros": ["README.md", "docs/plans/2026-10-20-frikile-design.md"] },
+    { "repo": "Ogires/interview-fight-club", "titulo": "Interview Fight Club", "ficheros": ["README.md", "docs/plans/2026-10-21-interview-fight-club-design.md"] },
+    { "repo": "Ogires/last-listened-for-notebooklm", "titulo": "Last listened for NotebookLM", "ficheros": ["README.md", "docs/plans/2026-10-15-notebooklm-last-played-design.md"] }
+  ]
+}

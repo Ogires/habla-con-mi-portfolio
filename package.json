@@ -1,0 +1,21 @@
+{
+  "name": "habla-con-mi-portfolio",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "vitest run",
+    "dev": "wrangler dev",
+    "typecheck": "tsc --noEmit",
+    "deploy": "wrangler deploy",
+    "ingesta": "node scripts/ingesta.mjs",
+    "calibrar": "node scripts/calibrar.mjs"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-plugin": "^1.4.6",
+    "@cloudflare/workers-types": "^5.20261021.1",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.5",
+    "wrangler": "^4.151.3"
+  }
+}

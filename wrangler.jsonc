@@ -1,0 +1,38 @@
+{
+  "name": "habla-con-mi-portfolio",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+  // run_worker_first: el Worker ve todas las peticiones (redirección de www y cabeceras en los estáticos)
+  "assets": { "directory": "./public", "binding": "ASSETS", "run_worker_first": true },
+  "routes": [
+    { "pattern": "webninja.fyi", "custom_domain": true },
+    { "pattern": "www.webninja.fyi", "custom_domain": true }
+  ],
+  "workers_dev": true,
+  "observability": { "enabled": true },
+  "ai": { "binding": "AI", "remote": true },
+  // remote: Vectorize no se simula en local (wrangler dev y la ingesta usan el índice real)
+  "vectorize": [{ "binding": "VECTORIZE", "index_name": "portfolio-bge-m3", "remote": true }],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "habla-con-mi-portfolio",
+      "database_id": "96cfa74f-ac0c-423f-a516-ab65c222791a",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "kv_namespaces": [{ "binding": "KV", "id": "943dd9fb590847d48ec2e1e0cc8486d1" }],
+  // Plan Free: solo Durable Objects con SQLite (new_sqlite_classes)
+  "durable_objects": { "bindings": [{ "name": "CONTADOR", "class_name": "Contador" }] },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Contador"] }],
+  "vars": {
+    "MODELO_EMBEDDINGS": "@cf/baai/bge-m3",
+    "GROQ_MODEL": "openai/gpt-oss-120b",
+    "GROQ_MODEL_RESERVA_1": "openai/gpt-oss-20b",
+    "GROQ_MODEL_RESERVA_2": "qwen/qwen3.8-27b",
+    // Por modelo: 3 × 50K = 150K/día; deja ~450K para Interview Fight Club (misma organización de Groq)
+    "CUOTA_TOKENS_DIA": "50000",
+    "UMBRAL_COSENO": "0.45",
+    "URL_LINKEDIN": "https://www.linkedin.com/in/sergio-bonet-plasencia-99427871"
+  }
+}

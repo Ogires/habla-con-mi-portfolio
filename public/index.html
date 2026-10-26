@@ -1,1 +1,60 @@
-<!doctype html><html lang="es"><meta charset="utf-8"><title>Habla con mi Portfolio</title><p>En obras</p></html>
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Habla con mi Portfolio · Sergio Bonet</title>
+  <meta name="description" content="Pregúntale a un asistente con IA por el trabajo de Sergio Bonet (Ogires). Responde citando sus repos, su CV y sus posts.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://webninja.fyi/">
+  <meta property="og:title" content="Habla con mi Portfolio · Sergio Bonet">
+  <meta property="og:description" content="Pregúntale por mi trabajo: responde citando las fuentes. Y debajo, las apps de mi factoría.">
+  <meta property="og:image" content="https://webninja.fyi/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="627">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+  <script type="module" src="/app.js"></script>
+</head>
+<body>
+  <header class="cabecera">
+    <h1 id="nombre">Sergio Bonet</h1>
+    <p id="rol"></p>
+    <nav aria-label="Perfiles">
+      <a id="enlace-linkedin" rel="noopener noreferrer" target="_blank">LinkedIn</a>
+      <a id="enlace-github" rel="noopener noreferrer" target="_blank">GitHub</a>
+    </nav>
+  </header>
+
+  <main>
+    <section id="chat" aria-labelledby="titulo-chat">
+      <h2 id="titulo-chat">Pregúntale a mi portfolio</h2>
+      <div id="conversacion"></div>
+      <form id="form-pregunta">
+        <label for="pregunta" class="visualmente-oculto">Tu pregunta</label>
+        <textarea id="pregunta" name="pregunta" rows="2" maxlength="400" required placeholder="¿Qué ha construido con Cloudflare?"></textarea>
+        <button type="submit">Preguntar</button>
+      </form>
+      <div id="ejemplos" aria-label="Preguntas de ejemplo">
+        <button type="button" data-pregunta="¿Qué ha construido con Cloudflare?">¿Qué ha construido con Cloudflare?</button>
+        <button type="button" data-pregunta="¿Cómo protege sus apps con IA?">¿Cómo protege sus apps con IA?</button>
+        <button type="button" data-pregunta="¿Con qué stack trabaja?">¿Con qué stack trabaja?</button>
+        <button type="button" data-pregunta="¿Qué app me recomiendas probar?">¿Qué app me recomiendas probar?</button>
+      </div>
+      <p class="aviso-ia">Respuestas generadas por IA a partir de los documentos enlazados.</p>
+      <button type="button" id="nueva" hidden>Nueva conversación</button>
+    </section>
+
+    <section id="galeria" aria-labelledby="titulo-galeria">
+      <h2 id="titulo-galeria">La factoría</h2>
+      <ul id="apps"></ul>
+    </section>
+  </main>
+
+  <footer>
+    <p>Cómo funciona: búsqueda híbrida (vectores + palabras clave) sobre mis repos, CV y posts, y respuestas con fuentes validadas. <a href="https://github.com/Ogires/habla-con-mi-portfolio">Código</a></p>
+    <p>Una app de la factoría de miniapps de Ogires · 0 € de infraestructura.</p>
+  </footer>
+</body>
+</html>

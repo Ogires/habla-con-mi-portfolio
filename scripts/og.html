@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>og-image</title>
+<!-- Plantilla de public/og-image.png: abrir en Playwright a 1200×627 y capturar -->
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; width: 1200px; height: 627px; overflow: hidden; }
+  body {
+    background: #e6e9e5;
+    color: #1d2321;
+    font-family: "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+    display: flex;
+    flex-direction: column;
+  }
+  .franja { height: 14px; background: repeating-linear-gradient(-45deg, #f2b51d 0 24px, #1d2321 24px 48px); }
+  .lienzo { flex: 1; padding: 0 72px 14px; display: flex; flex-direction: column; justify-content: center; }
+  h1 { margin: 0; font-size: 84px; font-weight: 800; letter-spacing: -0.04em; line-height: 1; }
+  .quien { margin: 18px 0 0; font-family: "Cascadia Mono", Consolas, monospace; font-size: 24px; color: #545e5a; }
+  .banco {
+    margin-top: 48px; padding: 30px 36px; background: #f5f6f3;
+    border: 2px solid #c4cbc6; border-radius: 4px; border-left: 4px solid #8e9893;
+  }
+  .pregunta { margin: 0 0 14px; font-family: "Cascadia Mono", Consolas, monospace; font-size: 26px; font-weight: 600; }
+  .pregunta::before { content: "> "; color: #545e5a; }
+  .respuesta { margin: 0; font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif; font-size: 30px; line-height: 1.45; }
+  .cita {
+    display: inline-block; padding: 0 8px; margin-left: 4px; background: #f2b51d; border-radius: 4px;
+    font-family: "Cascadia Mono", Consolas, monospace; font-size: 24px; font-weight: 700; vertical-align: 3px;
+  }
+  .fuente {
+    margin-top: 18px; padding: 8px 14px; border: 2px solid #c4cbc6; border-left: 8px solid #f2b51d; border-radius: 4px;
+    font-size: 22px; font-weight: 600; display: flex; justify-content: space-between;
+  }
+  .fuente span { font-family: "Cascadia Mono", Consolas, monospace; font-weight: 400; color: #545e5a; }
+</style>
+</head>
+<body>
+  <div class="franja"></div>
+  <div class="lienzo">
+    <h1>Habla con mi Portfolio</h1>
+    <p class="quien">Sergio Bonet · webninja.fyi</p>
+    <div class="banco">
+      <p class="pregunta">¿Ha usado Durable Objects?</p>
+      <p class="respuesta">Sí: Interview Fight Club lleva el rate limit exacto en un Durable Object con SQLite<span class="cita">[1]</span></p>
+      <div class="fuente">[1] interview-fight-club / README.md <span>repo</span></div>
+    </div>
+  </div>
+</body>
+</html>

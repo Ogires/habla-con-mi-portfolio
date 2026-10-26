@@ -1,0 +1,8 @@
+node_modules/
+.wrangler/
+.dev.vars
+# Fuentes privadas (CV, perfil, posts): nunca en el repo público
+fuentes.local.json
+data/privado/
+# Material personal de estudio
+docs/guia-implementacion-detallada.*

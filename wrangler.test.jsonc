@@ -1,0 +1,23 @@
+// Config SOLO para Vitest. Sin AI ni Vectorize: el handler cae a FTS5 (degradación real) y
+// los tests de búsqueda vectorial inyectan un recuperador falso
+{
+  "name": "habla-con-mi-portfolio-test",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+  "assets": { "directory": "./public", "binding": "ASSETS", "run_worker_first": true },
+  "d1_databases": [
+    { "binding": "DB", "database_name": "test", "database_id": "00000000-0000-0000-0000-000000000000", "migrations_dir": "migrations" }
+  ],
+  "kv_namespaces": [{ "binding": "KV", "id": "test" }],
+  "durable_objects": { "bindings": [{ "name": "CONTADOR", "class_name": "Contador" }] },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Contador"] }],
+  "vars": {
+    "MODELO_EMBEDDINGS": "@cf/baai/bge-m3",
+    "GROQ_MODEL": "openai/gpt-oss-120b",
+    "GROQ_MODEL_RESERVA_1": "openai/gpt-oss-20b",
+    "GROQ_MODEL_RESERVA_2": "qwen/qwen3.8-27b",
+    "CUOTA_TOKENS_DIA": "50000",
+    "UMBRAL_COSENO": "0.45",
+    "URL_LINKEDIN": "https://www.linkedin.com/in/ejemplo"
+  }
+}

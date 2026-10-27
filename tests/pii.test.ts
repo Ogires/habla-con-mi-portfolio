@@ -21,6 +21,11 @@ describe("buscarDatosPersonales", () => {
     ]);
   });
 
+  it("detecta teléfonos con cualquier agrupación de cifras", () => {
+    const texto = ["612 34 56 78", "+34 612 34 56 78", "612-34-56-78", "+34612345678"].join("\n");
+    expect(buscarDatosPersonales(texto).map((h) => h.tipo)).toEqual(["teléfono", "teléfono", "teléfono", "teléfono"]);
+  });
+
   it("no salta con datos técnicos del corpus", () => {
     const tecnico = "D1 71fe4cb9-1110-41c0-be4d-c3615607a613 · KV 0ce67492b8fe49b1961e598371cb4d22 · 110 tests · 2026-10-21 · 200000 tokens · 40 → 6";
     expect(buscarDatosPersonales(tecnico)).toEqual([]);

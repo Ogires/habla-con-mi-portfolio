@@ -14,6 +14,7 @@ import { leerFragmentos } from "../repos/fragmentos";
 import { claveCliente, json, leerJson } from "../http/util";
 
 const MAX_TOKENS = 700;
+const MAX_FUENTES = 5;
 
 export interface DepsPregunta {
   db: D1Database;
@@ -82,7 +83,7 @@ export async function preguntar(request: Request, deps: DepsPregunta, esperar?: 
   // Seguimientos ("¿y en esa?"): el embedding lleva también la pregunta anterior
   const consulta = [historial.at(-1)?.p, entrada.pregunta].filter(Boolean).join("\n");
   const fusion = await recuperar(deps.recuperador, consulta, entrada.pregunta, deps.umbral);
-  const fragmentos = await leerFragmentos(deps.db, fusion.map((f) => f.id));
+  const fragmentos = (await leerFragmentos(deps.db, fusion.map((f) => f.id))).slice(0, MAX_FUENTES);
   if (!fragmentos.length) return fija(RESPUESTAS.sinFuentes);
 
   const origenDe = new Map(fusion.map((f) => [f.id, f.origen]));

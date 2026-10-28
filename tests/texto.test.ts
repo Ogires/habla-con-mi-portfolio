@@ -16,8 +16,12 @@ describe("terminosSignificativos", () => {
     ]);
   });
 
-  it("conserva números y siglas de 3+ caracteres", () => {
-    expect(terminosSignificativos("Groq con gpt-oss 120b y D1")).toEqual(["groq", "gpt", "oss", "120b"]);
+  it("conserva números y siglas, también las de 2 caracteres (D1, KV, IA)", () => {
+    expect(terminosSignificativos("Groq con gpt-oss 120b y D1")).toEqual(["groq", "gpt", "oss", "120b", "d1"]);
+  });
+
+  it("quita las palabras vacías de 2 letras", () => {
+    expect(terminosSignificativos("¿Es de la IA en el KV? Is it on the KV")).toEqual(["ia", "kv"]);
   });
 });
 

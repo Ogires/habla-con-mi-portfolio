@@ -18,6 +18,10 @@ describe("buscarTexto (FTS5 en D1)", () => {
     expect(await buscarTexto(env.DB, "configuracion")).toEqual(["frk0000000000000-0"]);
   });
 
+  it("encuentra siglas de 2 letras", async () => {
+    expect(await buscarTexto(env.DB, "¿Qué guarda en D1?")).toEqual(["frk0000000000000-0"]);
+  });
+
   it("nada que buscar → []", async () => {
     expect(await buscarTexto(env.DB, "xilófono")).toEqual([]);
   });

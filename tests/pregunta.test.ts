@@ -19,6 +19,17 @@ describe("preguntar con búsqueda vectorial", () => {
     expect(ev[0].datos.map((f: { origen: string }) => f.origen)).toEqual(["vector"]);
     expect(ev.at(-1)?.datos.sinFuente).toBe(false);
   });
+
+  it("los vectores huérfanos (ya no están en D1) no quitan plazas a los fragmentos reales", async () => {
+    mockGroq(() => sseGroq(["Es un Wordle [1]."]));
+    const huerfanos = Array.from({ length: 5 }, (_, i) => ({ id: `borrado000000000-${i}`, score: 0.9 - i / 100 }));
+    const deps = {
+      ...depsDesdeEnv(env),
+      recuperador: { vector: async () => [...huerfanos, { id: "frk0000000000000-0", score: 0.6 }], texto: async () => [] },
+    };
+    const ev = await leerEventos(await preguntar(peticion("¿Qué juego hizo?"), deps));
+    expect(ev[0].datos.map((f: { titulo: string }) => f.titulo)).toEqual(["Frikile · Arquitectura"]);
+  });
 });
 
 describe("tope diario de IA por cliente", () => {

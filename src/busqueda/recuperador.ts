@@ -22,9 +22,13 @@ export function recuperadorCloudflare(env: Env): Recuperador {
   };
 }
 
+// Todos los candidatos (hasta 8 + 8), no el top 5: un vector huérfano (fragmento ya borrado de D1)
+// ocuparía una plaza. El handler se queda con los 5 primeros que sí existen en D1
+const CANDIDATOS = 16;
+
 export async function recuperar(r: Recuperador, consulta: string, pregunta: string, umbral: number): Promise<Fusionado[]> {
   const [v, t] = await Promise.allSettled([r.vector(consulta), r.texto(pregunta)]);
   if (v.status === "rejected") console.log(JSON.stringify({ evento: "vector_degradado", error: String(v.reason) }));
   if (t.status === "rejected") console.log(JSON.stringify({ evento: "fts_fallo", error: String(t.reason) }));
-  return fusionarRrf(v.status === "fulfilled" ? filtrarPorUmbral(v.value, umbral) : [], t.status === "fulfilled" ? t.value : []);
+  return fusionarRrf(v.status === "fulfilled" ? filtrarPorUmbral(v.value, umbral) : [], t.status === "fulfilled" ? t.value : [], CANDIDATOS);
 }

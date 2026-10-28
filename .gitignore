@@ -9,3 +9,6 @@ data/privado/
 cv-publico.md
 # Material personal de estudio
 docs/guia-implementacion-detallada.*
+
+# Plan de implementación: notas de trabajo para el agente, no se publica
+docs/plans/*-mv1.md

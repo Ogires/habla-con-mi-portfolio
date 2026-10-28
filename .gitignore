@@ -1,8 +1,11 @@
 node_modules/
 .wrangler/
-.dev.vars
+# Secretos locales: .dev.vars, .dev.vars.production, .env, .env.local...
+.dev.vars*
+.env*
 # Fuentes privadas (CV, perfil, posts): nunca en el repo público
 fuentes.local.json
 data/privado/
+cv-publico.md
 # Material personal de estudio
 docs/guia-implementacion-detallada.*

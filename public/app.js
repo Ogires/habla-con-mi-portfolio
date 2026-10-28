@@ -190,7 +190,8 @@ async function cargarGaleria() {
   $("#rol").textContent = perfil.rol;
   const linkedin = urlSegura(perfil.linkedin);
   if (linkedin) $("#enlace-linkedin").href = linkedin;
-  $("#enlace-github").href = perfil.github;
+  const github = urlSegura(perfil.github);
+  if (github) $("#enlace-github").href = github;
   $("#apps").replaceChildren(
     ...apps.map((a) => {
       const li = el("li", "app");

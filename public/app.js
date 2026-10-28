@@ -154,7 +154,8 @@ async function preguntar(texto) {
       else if (evento === "fin") turno.fin(datos);
       else if (evento === "error") turno.aviso(datos.mensaje);
     }
-    estado.historial = [...estado.historial, { p: texto.slice(0, 300), r: respuesta.slice(0, 300) }].slice(-2);
+    // Solo las preguntas: el servidor no se fía de una respuesta que le devuelva el navegador
+    estado.historial = [...estado.historial, { p: texto.slice(0, 300) }].slice(-2);
     $("#nueva").hidden = false;
   } catch {
     turno.aviso("Se ha perdido la conexión. Prueba otra vez.");

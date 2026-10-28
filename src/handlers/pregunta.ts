@@ -77,8 +77,10 @@ export async function preguntar(request: Request, deps: DepsPregunta, esperar?: 
 
   if (esPreguntaPrivada(entrada.pregunta)) return fija(RESPUESTAS.privada);
 
+  // Una pregunta privada anterior tampoco entra por la puerta de atrás (búsqueda o prompt)
+  const historial = entrada.historial.filter((t) => !esPreguntaPrivada(t.p));
   // Seguimientos ("¿y en esa?"): el embedding lleva también la pregunta anterior
-  const consulta = [entrada.historial.at(-1)?.p, entrada.pregunta].filter(Boolean).join("\n");
+  const consulta = [historial.at(-1)?.p, entrada.pregunta].filter(Boolean).join("\n");
   const fusion = await recuperar(deps.recuperador, consulta, entrada.pregunta, deps.umbral);
   const fragmentos = await leerFragmentos(deps.db, fusion.map((f) => f.id));
   if (!fragmentos.length) return fija(RESPUESTAS.sinFuentes);
@@ -93,7 +95,7 @@ export async function preguntar(request: Request, deps: DepsPregunta, esperar?: 
     origen: origenDe.get(f.id) ?? "texto",
   }));
   const paraPrompt = fragmentos.map((f, i) => ({ n: i + 1, titulo: f.titulo, texto: f.texto }));
-  const mensajes = construirMensajes({ pregunta: entrada.pregunta, historial: entrada.historial, fragmentos: paraPrompt, nonce: nuevoNonce() });
+  const mensajes = construirMensajes({ pregunta: entrada.pregunta, historial, fragmentos: paraPrompt, nonce: nuevoNonce() });
 
   if (!(await hayCupoIa(deps, cliente))) return fija(RESPUESTAS.cupo, fuentes, { degradado: true });
   const r = await primeraRespuesta(deps.proveedores, { mensajes, maxTokens: MAX_TOKENS }, deps.cadena);

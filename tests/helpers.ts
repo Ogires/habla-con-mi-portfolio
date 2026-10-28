@@ -12,14 +12,14 @@ export interface PeticionGroq {
   nonce: string | null;
 }
 
-// El nonce se lee del delimitador de fragmentos del prompt de sistema
+// El nonce se lee del delimitador de fragmentos del mensaje del usuario
 export function mockGroq(crear: (p: PeticionGroq) => Response | Promise<Response>) {
   const llamadas: PeticionGroq[] = [];
   globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
     if (url !== GROQ_URL) return fetchReal(input, init);
     const cuerpo = JSON.parse(String(init?.body));
-    const p: PeticionGroq = { ...cuerpo, nonce: /<fragmentos-([0-9a-f]{8})>/.exec(cuerpo.messages[0].content)?.[1] ?? null };
+    const p: PeticionGroq = { ...cuerpo, nonce: /<fragmentos-([0-9a-f]{8})>/.exec(cuerpo.messages.at(-1).content)?.[1] ?? null };
     llamadas.push(p);
     return crear(p);
   }) as typeof fetch;

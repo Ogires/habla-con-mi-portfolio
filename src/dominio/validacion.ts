@@ -4,9 +4,9 @@ import { recortar } from "./texto";
 export const MAX_PREGUNTA = 400;
 export const MAX_TURNO = 300;
 
+// Solo la pregunta: la respuesta la mandaría el cliente y no es de fiar (ver prompt.ts)
 export interface Turno {
   p: string;
-  r: string;
 }
 
 export interface Entrada {
@@ -33,8 +33,8 @@ export function validarEntrada(cuerpo: Record<string, unknown> | null): Entrada 
   if (!Array.isArray(crudo) || crudo.length > 2) return null;
   const historial: Turno[] = [];
   for (const t of crudo) {
-    if (!t || typeof t !== "object" || typeof t.p !== "string" || typeof t.r !== "string") return null;
-    historial.push({ p: recortar(limpiar(t.p), MAX_TURNO), r: recortar(limpiar(t.r), MAX_TURNO) });
+    if (!t || typeof t !== "object" || typeof t.p !== "string") return null;
+    historial.push({ p: recortar(limpiar(t.p), MAX_TURNO) });
   }
   return { pregunta, historial };
 }

@@ -1,4 +1,6 @@
 // scripts/lib/fuentes.mjs — extracción de fuentes e ingesta incremental
+import { VERSION_TROCEO } from "./troceo.mjs";
+
 // De las guías de LinkedIn SOLO el post: las instrucciones del agente serían ruido y vía de inyección
 export function extraerPost(guia) {
   const i = guia.search(/^#{2,4}[^\n]*\bel post\b/im);
@@ -28,6 +30,20 @@ export function filtrarSecciones(md, incluir) {
 export async function sha256(texto) {
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(texto));
   return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+// El hash cubre todo lo que acaba en los fragmentos, no solo el texto: si no, cambiar un título en
+// data/fuentes.json, una URL o el troceo no reindexaría nada
+export function hashFuente(f) {
+  return sha256(JSON.stringify([VERSION_TROCEO, f.tipo, f.titulo, f.url, f.anclar ?? false, f.minimo ?? null, f.texto]));
+}
+
+// Dos fuentes con el mismo id se pisarían en D1 (y la segunda borraría los fragmentos de la primera)
+export function idsRepetidos(fuentes) {
+  const vistos = new Set();
+  const repetidos = new Set();
+  for (const { id } of fuentes) (vistos.has(id) ? repetidos : vistos).add(id);
+  return [...repetidos];
 }
 
 // Vectorize admite ids de hasta 64 bytes: hash corto de la fuente + orden

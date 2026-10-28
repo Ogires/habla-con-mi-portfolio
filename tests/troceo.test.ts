@@ -30,4 +30,9 @@ describe("trocear", () => {
     expect(trozos[0].titulo).toBe("Corta");
     expect(trozos[0].texto.startsWith("hola")).toBe(true);
   });
+
+  it("la sección fundida conserva su encabezado en el texto (si no, no se encontraría por él)", () => {
+    const [trozo] = trocear(`# Corta\nhola\n## Habilidades técnicas\n${palabras(50)}`);
+    expect(trozo.texto).toContain("hola Habilidades técnicas palabra0");
+  });
 });

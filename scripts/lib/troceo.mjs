@@ -2,6 +2,8 @@
 export const PALABRAS = 300;
 export const SOLAPE = 50;
 export const MINIMO = 40;
+// Súbela al cambiar cómo se trocea: entra en el hash de cada fuente y obliga a reindexarlas todas
+export const VERSION_TROCEO = 2;
 
 // Anclaje de GitHub: minúsculas, fuera la puntuación (salvo - y _), espacios → guiones
 export function slugGithub(titulo) {
@@ -32,7 +34,9 @@ export function trocear(md, { palabras = PALABRAS, solape = SOLAPE, minimo = MIN
   const res = [];
   let pendiente = null;
   for (const s of secciones(md)) {
-    const sec = pendiente ? { titulo: pendiente.titulo, texto: `${pendiente.texto}\n\n${s.texto}` } : s;
+    // Al fundir, el fragmento se queda con el título de la primera sección; el encabezado de la
+    // siguiente pasa al texto para que la búsqueda lo siga encontrando
+    const sec = pendiente ? { titulo: pendiente.titulo, texto: `${pendiente.texto}\n\n${s.titulo ? `${s.titulo}\n` : ""}${s.texto}` } : s;
     if (contar(sec.texto) < minimo) {
       pendiente = sec;
       continue;

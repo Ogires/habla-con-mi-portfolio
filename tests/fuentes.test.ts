@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { extraerPost, filtrarSecciones, idFragmento, planificar, sha256 } from "../scripts/lib/fuentes.mjs";
+import { extraerPost, filtrarSecciones, hashFuente, idFragmento, idsRepetidos, planificar, sha256 } from "../scripts/lib/fuentes.mjs";
 
 describe("extraerPost", () => {
   it("devuelve solo el bloque de código bajo el encabezado del post", () => {
@@ -47,5 +47,26 @@ describe("planificar", () => {
 describe("sha256", () => {
   it("hex de 64", async () => {
     expect(await sha256("hola")).toMatch(/^[0-9a-f]{64}$/);
+  });
+});
+
+describe("hashFuente", () => {
+  const base = { id: "x", tipo: "repo", titulo: "X · README", url: "https://github.com/Ogires/x", texto: "hola", anclar: true };
+
+  it("es estable", async () => {
+    expect(await hashFuente({ ...base })).toBe(await hashFuente(base));
+  });
+
+  it("cambia si cambian el texto o los metadatos que se guardan en cada fragmento", async () => {
+    const h = await hashFuente(base);
+    for (const cambio of [{ texto: "adiós" }, { titulo: "Otro" }, { url: "https://github.com/Ogires/y" }, { tipo: "doc" }, { anclar: false }, { minimo: 0 }])
+      expect(await hashFuente({ ...base, ...cambio }), JSON.stringify(cambio)).not.toBe(h);
+  });
+});
+
+describe("idsRepetidos", () => {
+  it("devuelve cada id repetido una vez", () => {
+    expect(idsRepetidos([{ id: "a" }, { id: "b" }, { id: "a" }, { id: "a" }])).toEqual(["a"]);
+    expect(idsRepetidos([{ id: "a" }, { id: "b" }])).toEqual([]);
   });
 });

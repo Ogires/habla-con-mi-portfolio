@@ -4,7 +4,7 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { buscarDatosPersonales } from "./lib/pii.mjs";
-import { extraerPost, filtrarSecciones, idFragmento, planificar, sha256 } from "./lib/fuentes.mjs";
+import { extraerPost, filtrarSecciones, hashFuente, idFragmento, idsRepetidos, planificar } from "./lib/fuentes.mjs";
 import { slugGithub, trocear } from "./lib/troceo.mjs";
 import { abrirCloudflare } from "./lib/embeddings.mjs";
 
@@ -111,6 +111,12 @@ async function main() {
   const { apps } = JSON.parse(readFileSync(ruta("public", "apps.json"), "utf8"));
   const fuentes = [...fuentesPublicas(JSON.parse(readFileSync(ruta("data", "fuentes.json"), "utf8")), apps), ...fuentesPrivadas(config)];
 
+  const repetidos = idsRepetidos(fuentes);
+  if (repetidos.length) {
+    console.error(`Ingesta abortada: ids de fuente repetidos: ${repetidos.join(", ")}`);
+    process.exit(1);
+  }
+
   // §5.1: un solo dato personal aborta TODO antes de subir nada
   const hallazgos = hallazgosPersonales(fuentes, config.permitidos);
   if (hallazgos.length) {
@@ -119,7 +125,7 @@ async function main() {
   }
 
   const ahora = new Map();
-  for (const f of fuentes) ahora.set(f.id, await sha256(f.texto));
+  for (const f of fuentes) ahora.set(f.id, await hashFuente(f));
   const antes = new Map(d1Json("SELECT id, hash FROM fuentes").map((r) => [r.id, r.hash]));
   const plan = planificar(antes, ahora);
   console.log(`Nuevas ${plan.nuevas.length} · cambiadas ${plan.cambiadas.length} · borradas ${plan.borradas.length} · iguales ${plan.iguales.length}`);

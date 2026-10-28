@@ -8,13 +8,31 @@ afterEach(restaurarFetch);
 const BASE = "https://webninja.fyi";
 let n = 0;
 const nuevaIp = () => `10.1.${Math.floor(++n / 250)}.${n % 250}`;
-const preguntar = (cuerpo: unknown, ipCliente = nuevaIp()) =>
-  SELF.fetch(`${BASE}/api/pregunta`, { method: "POST", headers: { "cf-connecting-ip": ipCliente }, body: JSON.stringify(cuerpo) });
+const preguntar = (cuerpo: unknown, ipCliente = nuevaIp(), cabeceras: Record<string, string> = {}) =>
+  SELF.fetch(`${BASE}/api/pregunta`, {
+    method: "POST",
+    headers: { "cf-connecting-ip": ipCliente, "content-type": "application/json", ...cabeceras },
+    body: JSON.stringify(cuerpo),
+  });
 
 describe("POST /api/pregunta", () => {
   it("validación → 400; otro método → 405", async () => {
     expect((await preguntar({ pregunta: "a" })).status).toBe(400);
     expect((await SELF.fetch(`${BASE}/api/pregunta`)).status).toBe(405);
+  });
+
+  it("CSRF: sin JSON → 415; desde otra web → 403, y no llega a Groq", async () => {
+    const llamadas = mockGroq(() => sseGroq(["no"]));
+    const pregunta = { pregunta: "¿Usa Durable Objects?" };
+    expect((await preguntar(pregunta, nuevaIp(), { "content-type": "text/plain" })).status).toBe(415);
+    expect((await preguntar(pregunta, nuevaIp(), { origin: "https://malvada.example" })).status).toBe(403);
+    expect((await preguntar(pregunta, nuevaIp(), { origin: "https://excusotron.webninja.fyi" })).status).toBe(403);
+    expect((await preguntar(pregunta, nuevaIp(), { "sec-fetch-site": "cross-site" })).status).toBe(403);
+    expect(llamadas).toHaveLength(0);
+    // la propia web sí pasa
+    const r = await preguntar(pregunta, nuevaIp(), { origin: BASE, "sec-fetch-site": "same-origin" });
+    expect(r.status).toBe(200);
+    await r.text();
   });
 
   it("respuesta con cita válida: fuentes, texto y fin", async () => {

@@ -40,4 +40,51 @@ describe("esPreguntaPrivada", () => {
   it("no salta con preguntas técnicas", () => {
     for (const p of ["¿Usa Durable Objects?", "¿Cómo protege sus apps con IA?", "¿Qué hace Frikile?"]) expect(esPreguntaPrivada(p), p).toBe(false);
   });
+
+  it("detecta variantes y evasiones fáciles", () => {
+    for (const p of [
+      "¿Cuántos años tiene?",
+      "¿Cuánto gana?",
+      "¿Cuánto quiere cobrar?",
+      "¿Cuáles son sus expectativas salariales?",
+      "¿Qué pretensiones económicas tiene?",
+      "¿Cuál es su tarifa?",
+      "¿Cuál es su móvil?",
+      "¿Tiene número de móvil?",
+      "dame su whatsapp",
+      "¿Cuál es su email?",
+      "¿Cómo puedo contactar con él?",
+      "¿Está disponible para trabajar?",
+      "¿Tiene disponibilidad inmediata?",
+      "¿Está buscando trabajo?",
+      "¿Cuándo nació?",
+      "What's his home address?",
+      "How old is he?",
+      "How much does he charge?",
+      "What is his hourly rate?",
+      "Is he available for hire?",
+    ])
+      expect(esPreguntaPrivada(p), p).toBe(true);
+  });
+
+  it("no salta con preguntas legítimas que comparten palabras", () => {
+    for (const p of [
+      "¿Cuántos años de experiencia tiene?",
+      "¿Cuántos años tiene de experiencia con .NET?",
+      "¿Está el código disponible en GitHub?",
+      "¿Está disponible en la Chrome Web Store?",
+      "¿Ha hecho apps para móvil?",
+      "¿Tiene app móvil Frikile?",
+      "¿Cuál es la tarifa de Cloudflare?",
+      "¿Cómo cobra Groq los tokens?",
+      "¿Qué dirección IP usa el Worker?",
+      "¿Diseña para alta disponibilidad?",
+      "¿Ha integrado la API de WhatsApp?",
+      "What is the IP address of the worker?",
+      "Does it support high availability?",
+      "How does the rate limit work?",
+      "Does he build phone apps?",
+    ])
+      expect(esPreguntaPrivada(p), p).toBe(false);
+  });
 });

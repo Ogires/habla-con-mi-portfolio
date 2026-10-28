@@ -158,7 +158,7 @@ Errores en JSON: `400` "La pregunta debe tener entre 3 y 400 caracteres.", `403`
 
 ```bash
 npm install
-npm test           # 119 tests sobre el runtime real de Workers (D1 con FTS5 y Durable Objects incluidos)
+npm test           # 127 tests sobre el runtime real de Workers (D1 con FTS5 y Durable Objects incluidos)
 npm run typecheck
 npx wrangler d1 migrations apply habla-con-mi-portfolio --local
 npm run dev        # wrangler dev: AI y Vectorize son los remotos (requiere wrangler login)
@@ -258,6 +258,14 @@ D1 guarda el hash de cada fuente, por eso va después de Vectorize: si algo fall
 **Qué se hizo.** Un commit con sus tests por cada grupo; los detalles están en este README y en el historial de git. Resistieron sin cambios: XSS, inyección en la consulta FTS5, redirección abierta, inyección de etiquetas del delimitador y el rate limit concurrente.
 
 **Lo que se asume.** La comprobación del presupuesto y la suma de tokens no son una única operación atómica: varias preguntas simultáneas pueden pasar a la vez el corte del 90 % y pasarse de la cuota en lo que gasten (~3K tokens cada una). Lo amortiguan el margen del 10 % (5K tokens por modelo) y los límites por IP.
+
+### 2026-10-28 · gpt-oss cita a veces con 【n】
+
+**Qué pasó.** En la primera prueba en local con datos reales, gpt-oss-120b citó `【3】` en vez de `[3]`, el formato interno de OpenAI. El servidor no reconocía ninguna cita, el navegador las pintaba como texto y la respuesta salía con el aviso "no cita ninguna fuente".
+
+**Qué se hizo.** El stream normaliza `【n】` y `【n†…】` a `[n]` antes de enviar cada delta, así que el navegador y la validación de citas ven lo mismo. Como una cita puede llegar partida entre dos deltas (`"D1 【"` + `"1】"`), lo que va desde un `【` sin cerrar se retiene hasta el siguiente, con un tope de 30 caracteres para no frenar el stream si no era una cita. El prompt pide además corchetes simples con un ejemplo.
+
+**Lo que se asume.** Solo se normalizan esas dos formas. Si el modelo inventa otra, sus citas no se reconocen y la respuesta sale con el aviso "verifícalo", como antes de este arreglo.
 
 ## Licencia
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { analizarCitas } from "../src/dominio/citas";
+import { analizarCitas, normalizadorCitas } from "../src/dominio/citas";
 import { FRASE_NO_APARECE } from "../src/dominio/respuestas";
 
 const F = [
@@ -39,5 +39,39 @@ describe("analizarCitas", () => {
     const inicio = performance.now();
     analizarCitas("[1]   ".repeat(13) + "x", F);
     expect(performance.now() - inicio).toBeLessThan(100);
+  });
+});
+
+// gpt-oss a veces cita al estilo interno de OpenAI (visto en local el 2026-10-28)
+describe("normalizadorCitas", () => {
+  const normalizar = (trozos: string[]) => {
+    const n = normalizadorCitas();
+    const salidas = trozos.map((t) => n.empujar(t));
+    return { salidas, total: salidas.join("") + n.vaciar() };
+  };
+
+  it("【n】 y 【n†…】 pasan a [n]", () => {
+    expect(normalizar(["Usa D1【2】 y KV【3†L1-L4】."]).total).toBe("Usa D1[2] y KV[3].");
+  });
+
+  it("una cita partida entre trozos se retiene hasta que se cierra", () => {
+    const { salidas, total } = normalizar(["Usa D1 【", "1", "2】."]);
+    expect(salidas).toEqual(["Usa D1 ", "", "[12]."]);
+    expect(total).toBe("Usa D1 [12].");
+  });
+
+  it("un 【 que no es cita no retiene el texto para siempre", () => {
+    const largo = "x".repeat(40);
+    const { salidas, total } = normalizar(["a【", largo, "b"]);
+    expect(salidas[1]).toBe(`【${largo}`);
+    expect(total).toBe(`a【${largo}b`);
+  });
+
+  it("lo que no es una cita numérica se deja tal cual", () => {
+    expect(normalizar(["【nota】 y 【123】"]).total).toBe("【nota】 y 【123】");
+  });
+
+  it("al vaciar sale lo retenido aunque no se haya cerrado", () => {
+    expect(normalizar(["Usa D1 【1"]).total).toBe("Usa D1 【1");
   });
 });

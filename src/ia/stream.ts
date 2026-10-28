@@ -1,4 +1,5 @@
 // src/ia/stream.ts — SSE propio hacia el navegador: fuentes → texto* → fin | error
+import { normalizadorCitas } from "../dominio/citas";
 import type { Origen } from "../dominio/fusion";
 import { leerSseOpenAi } from "./sse";
 
@@ -58,20 +59,24 @@ export function streamRespuesta(o: {
         let truncada = false;
         try {
           if (o.upstream) {
+            const citas = normalizadorCitas();
+            const emitir = (t: string) => {
+              if (!t) return;
+              texto += t;
+              enviar("texto", { t });
+            };
             try {
               for await (const d of leerSseOpenAi(o.upstream)) {
                 if (d.tokens !== undefined) tokens = d.tokens;
                 if (d.motivo === "length") truncada = true;
-                if (d.texto) {
-                  texto += d.texto;
-                  enviar("texto", { t: d.texto });
-                }
+                if (d.texto) emitir(citas.empujar(d.texto));
               }
             } catch (err) {
               // stream cortado o inactivo: se cierra con lo recibido y se avisa
               truncada = true;
               console.error(JSON.stringify({ evento: "stream_error", fase: "proveedor", mensaje: String(err) }));
             }
+            emitir(citas.vaciar());
           }
           if (!texto.trim()) {
             texto = o.textoFijo;

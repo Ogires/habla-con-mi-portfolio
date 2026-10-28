@@ -27,6 +27,29 @@ function frases(texto: string): string[] {
 
 const ordenar = (s: Set<number>) => [...s].sort((a, b) => a - b);
 
+// gpt-oss a veces cita al estilo interno de OpenAI, 【3】 o 【3†L1-L4】, en vez de [3]
+const CITA_ANCHA = /【\s{0,2}(\d{1,2})\s{0,2}(?:†[^】]{0,20})?】/g;
+const MAX_CITA_ANCHA = 30; // la cita ancha más larga que casa: 29 caracteres
+
+// Se aplica a los deltas del stream, así que una cita puede llegar partida ("D1 【" + "1】"): lo que
+// va desde un 【 sin cerrar se retiene hasta el siguiente delta, y como mucho MAX_CITA_ANCHA
+export function normalizadorCitas() {
+  let pendiente = "";
+  return {
+    empujar(trozo: string): string {
+      const t = (pendiente + trozo).replace(CITA_ANCHA, "[$1]");
+      const i = t.lastIndexOf("【");
+      pendiente = i >= 0 && !t.includes("】", i) && t.length - i < MAX_CITA_ANCHA ? t.slice(i) : "";
+      return pendiente ? t.slice(0, i) : t;
+    },
+    vaciar(): string {
+      const t = pendiente;
+      pendiente = "";
+      return t;
+    },
+  };
+}
+
 export function analizarCitas(respuesta: string, fragmentos: { n: number; texto: string }[]): AnalisisCitas {
   const terminosDe = new Map(fragmentos.map((f) => [f.n, new Set(terminosSignificativos(f.texto))]));
   const validas = new Set<number>();

@@ -55,6 +55,27 @@ describe("streamRespuesta", () => {
     expect(ev.at(-1)?.datos.truncada).toBe(true);
   });
 
+  it("normaliza las citas 【n】 aunque lleguen partidas: el navegador y alTerminar ven [n]", async () => {
+    let visto: unknown;
+    const ev = await leer(
+      streamRespuesta({
+        fuentes: FUENTES,
+        upstream: sseGroq(["Usa D1 【", "1】."], 50).body!,
+        textoFijo: "x",
+        alTerminar: async (r) => ((visto = r), FIN),
+      })
+    );
+    expect(ev.filter((e) => e.evento === "texto").map((e) => e.datos.t).join("")).toBe("Usa D1 [1].");
+    expect(visto).toEqual({ texto: "Usa D1 [1].", tokens: 50 });
+  });
+
+  it("si el stream se corta con una cita a medias, sale lo retenido", async () => {
+    const cortado = new Response(`data: ${JSON.stringify({ choices: [{ delta: { content: "Usa D1 【1" } }] })}\n\n`).body!;
+    let visto: unknown;
+    await leer(streamRespuesta({ fuentes: [], upstream: cortado, textoFijo: "x", alTerminar: async (r) => ((visto = r), FIN) }));
+    expect(visto).toEqual({ texto: "Usa D1 【1", tokens: null });
+  });
+
   it("si alTerminar falla → evento error", async () => {
     const ev = await leer(
       streamRespuesta({

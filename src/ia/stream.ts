@@ -22,7 +22,11 @@ export interface FinRespuesta {
   sinFuente: boolean;
   citasDudosas: number[];
   citasInvalidas: number[];
+  truncada: boolean; // stream cortado, inactivo o al límite de max_tokens: la respuesta puede estar incompleta
 }
+
+// Lo que decide quien llama; truncada lo sabe solo el stream
+export type ResumenFin = Omit<FinRespuesta, "truncada">;
 
 const MENSAJE_ERROR = "Algo ha fallado al responder. Prueba otra vez en un momento.";
 const codificador = new TextEncoder();
@@ -41,7 +45,7 @@ export function streamRespuesta(o: {
   fuentes: FuenteEvento[];
   upstream?: ReadableStream<Uint8Array>;
   textoFijo: string;
-  alTerminar(r: { texto: string; tokens: number | null }): Promise<FinRespuesta>;
+  alTerminar(r: { texto: string; tokens: number | null }): Promise<ResumenFin>;
   esperar?: Esperar;
 }): ReadableStream<Uint8Array> {
   return new ReadableStream<Uint8Array>({
@@ -51,18 +55,21 @@ export function streamRespuesta(o: {
         enviar("fuentes", o.fuentes);
         let texto = "";
         let tokens: number | null = null;
+        let truncada = false;
         try {
           if (o.upstream) {
             try {
               for await (const d of leerSseOpenAi(o.upstream)) {
                 if (d.tokens !== undefined) tokens = d.tokens;
+                if (d.motivo === "length") truncada = true;
                 if (d.texto) {
                   texto += d.texto;
                   enviar("texto", { t: d.texto });
                 }
               }
             } catch (err) {
-              // stream cortado: se cierra con lo recibido
+              // stream cortado o inactivo: se cierra con lo recibido y se avisa
+              truncada = true;
               console.error(JSON.stringify({ evento: "stream_error", fase: "proveedor", mensaje: String(err) }));
             }
           }
@@ -70,7 +77,7 @@ export function streamRespuesta(o: {
             texto = o.textoFijo;
             enviar("texto", { t: o.textoFijo });
           }
-          enviar("fin", await o.alTerminar({ texto, tokens }));
+          enviar("fin", { ...(await o.alTerminar({ texto, tokens })), truncada });
         } catch (err) {
           console.error(JSON.stringify({ evento: "stream_error", mensaje: String(err) }));
           enviar("error", { mensaje: MENSAJE_ERROR });

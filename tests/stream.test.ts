@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { streamRespuesta, type FinRespuesta } from "../src/ia/stream";
+import { streamRespuesta, type ResumenFin } from "../src/ia/stream";
 import { leerEventos, sseGroq } from "./helpers";
 
 const FUENTES = [{ n: 1, titulo: "t", url: "https://github.com/Ogires/x", tipo: "repo", extracto: "e", origen: "texto" as const }];
-const FIN: FinRespuesta = { modelo: "m", degradado: false, sinFuente: false, citasDudosas: [], citasInvalidas: [] };
+const FIN: ResumenFin = { modelo: "m", degradado: false, sinFuente: false, citasDudosas: [], citasInvalidas: [] };
 const leer = (s: ReadableStream<Uint8Array>) => leerEventos(new Response(s));
 
 describe("streamRespuesta", () => {
@@ -34,6 +34,25 @@ describe("streamRespuesta", () => {
   it("upstream vacío: cae al texto fijo", async () => {
     const ev = await leer(streamRespuesta({ fuentes: [], upstream: sseGroq([]).body!, textoFijo: "vacía", alTerminar: async () => FIN }));
     expect(ev.find((e) => e.evento === "texto")?.datos.t).toBe("vacía");
+  });
+
+  it("respuesta completa → fin con truncada: false", async () => {
+    const ev = await leer(streamRespuesta({ fuentes: [], upstream: sseGroq(["Hola [1]."]).body!, textoFijo: "x", alTerminar: async () => FIN }));
+    expect(ev.at(-1)).toEqual({ evento: "fin", datos: { ...FIN, truncada: false } });
+  });
+
+  it("upstream cortado a mitad → texto recibido y fin con truncada: true", async () => {
+    const cortado = new Response(`data: ${JSON.stringify({ choices: [{ delta: { content: "Usa un Durable" } }] })}\n\n`).body!;
+    let visto: unknown;
+    const ev = await leer(streamRespuesta({ fuentes: [], upstream: cortado, textoFijo: "x", alTerminar: async (r) => ((visto = r), FIN) }));
+    expect(visto).toEqual({ texto: "Usa un Durable", tokens: null });
+    expect(ev.at(-1)?.datos.truncada).toBe(true);
+  });
+
+  it("finish_reason 'length' (max_tokens) → truncada: true", async () => {
+    const largo = new Response(`data: ${JSON.stringify({ choices: [{ delta: { content: "Usa" }, finish_reason: "length" }] })}\n\ndata: [DONE]\n\n`).body!;
+    const ev = await leer(streamRespuesta({ fuentes: [], upstream: largo, textoFijo: "x", alTerminar: async () => FIN }));
+    expect(ev.at(-1)?.datos.truncada).toBe(true);
   });
 
   it("si alTerminar falla → evento error", async () => {

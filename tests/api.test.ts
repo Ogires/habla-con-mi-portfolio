@@ -42,7 +42,7 @@ describe("POST /api/pregunta", () => {
     expect(ev[0].datos[0]).toMatchObject({ n: 1, titulo: "Interview Fight Club · Contadores exactos", tipo: "repo", origen: "texto" });
     expect(ev.at(-1)).toEqual({
       evento: "fin",
-      datos: { modelo: "openai/gpt-oss-120b", degradado: false, sinFuente: false, citasDudosas: [], citasInvalidas: [] },
+      datos: { modelo: "openai/gpt-oss-120b", degradado: false, sinFuente: false, citasDudosas: [], citasInvalidas: [], truncada: false },
     });
     // el prompt lleva el fragmento dentro del delimitador con nonce
     expect(llamadas[0].messages.at(-1)?.content).toContain(`<fragmentos-${llamadas[0].nonce}>`);

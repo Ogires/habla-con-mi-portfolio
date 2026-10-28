@@ -7,6 +7,9 @@ const form = $("#form-pregunta");
 const input = $("#pregunta");
 const conversacion = $("#conversacion");
 const ORIGEN = { vector: "búsqueda semántica", texto: "palabras clave", ambos: "semántica y palabras clave" };
+// El servidor ya corta a los 15 s sin datos de Groq; esto cubre la red. Holgado porque antes de las
+// cabeceras la cadena puede probar hasta 3 modelos con 8 s de margen cada uno
+const INACTIVIDAD_MS = 45_000;
 
 const el = (tag, clase, texto) => {
   const n = document.createElement(tag);
@@ -120,7 +123,10 @@ function crearTurno(pregunta) {
           a.title = "Cita sin respaldo claro en la fuente";
         }
       }
-      if (datos.sinFuente) this.aviso("Esta respuesta no cita ninguna fuente: verifícala.");
+      const avisos = [];
+      if (datos.truncada) avisos.push("La respuesta se ha cortado: puede estar incompleta.");
+      if (datos.sinFuente) avisos.push("Esta respuesta no cita ninguna fuente: verifícala.");
+      if (avisos.length) this.aviso(avisos.join(" "));
     },
     aviso(mensaje) {
       aviso.textContent = mensaje;
@@ -137,11 +143,20 @@ async function preguntar(texto) {
   input.value = "";
   const turno = crearTurno(texto);
   let respuesta = "";
+  // Sin esto, un stream que se queda colgado dejaría el chat bloqueado en "Buscando…"
+  const control = new AbortController();
+  let vigilante;
+  const rearmar = () => {
+    clearTimeout(vigilante);
+    vigilante = setTimeout(() => control.abort(), INACTIVIDAD_MS);
+  };
   try {
+    rearmar();
     const r = await fetch("/api/pregunta", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ pregunta: texto, historial: estado.historial }),
+      signal: control.signal,
     });
     if (!r.ok) {
       const e = await r.json().catch(() => ({}));
@@ -149,6 +164,7 @@ async function preguntar(texto) {
       return;
     }
     for await (const { evento, datos } of eventosSse(r.body)) {
+      rearmar();
       if (evento === "fuentes") turno.fuentes(datos);
       else if (evento === "texto") turno.texto((respuesta += datos.t));
       else if (evento === "fin") turno.fin(datos);
@@ -160,6 +176,7 @@ async function preguntar(texto) {
   } catch {
     turno.aviso("Se ha perdido la conexión. Prueba otra vez.");
   } finally {
+    clearTimeout(vigilante);
     estado.enCurso = false;
     form.classList.remove("ocupado");
     input.focus();

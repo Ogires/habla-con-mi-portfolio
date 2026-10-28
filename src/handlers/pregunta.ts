@@ -9,7 +9,7 @@ import { recuperadorCloudflare, recuperar, type Recuperador } from "../busqueda/
 import { contarPregunta, cupoIa, limitar, sumarTokens } from "../contadores/uso";
 import { construirCadena, depsCadena, primeraRespuesta, type DepsCadena } from "../ia/cadena";
 import type { LlmProvider } from "../ia/proveedor";
-import { CABECERAS_SSE, streamRespuesta, type Esperar, type FinRespuesta, type FuenteEvento } from "../ia/stream";
+import { CABECERAS_SSE, streamRespuesta, type Esperar, type FuenteEvento, type ResumenFin } from "../ia/stream";
 import { leerFragmentos } from "../repos/fragmentos";
 import { claveCliente, json, leerJson } from "../http/util";
 
@@ -42,7 +42,7 @@ export function depsDesdeEnv(env: Env): DepsPregunta {
   };
 }
 
-const finSimple = (o: Partial<FinRespuesta> = {}): FinRespuesta => ({
+const finSimple = (o: Partial<ResumenFin> = {}): ResumenFin => ({
   modelo: null,
   degradado: false,
   sinFuente: false,
@@ -53,7 +53,7 @@ const finSimple = (o: Partial<FinRespuesta> = {}): FinRespuesta => ({
 
 const sse = (cuerpo: ReadableStream<Uint8Array>) => new Response(cuerpo, { headers: CABECERAS_SSE });
 
-const fija = (texto: string, fuentes: FuenteEvento[] = [], fin: Partial<FinRespuesta> = {}) =>
+const fija = (texto: string, fuentes: FuenteEvento[] = [], fin: Partial<ResumenFin> = {}) =>
   sse(streamRespuesta({ fuentes, textoFijo: texto, alTerminar: async () => finSimple(fin) }));
 
 // Solo gasta cupo lo que de verdad va a llamar a Groq. Si el contador no responde, sin IA (fail-closed)

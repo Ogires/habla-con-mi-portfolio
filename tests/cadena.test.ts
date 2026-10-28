@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { env } from "cloudflare:test";
 import { proveedorGroq } from "../src/ia/proveedor";
-import { primeraRespuesta } from "../src/ia/cadena";
+import { depsCadena, primeraRespuesta } from "../src/ia/cadena";
 import { mockGroq, restaurarFetch, sseGroq } from "./helpers";
 
 afterEach(restaurarFetch);
@@ -69,6 +69,28 @@ describe("primeraRespuesta", () => {
       },
     });
     expect(r).toBeNull();
+    expect(llamadas).toHaveLength(0);
+  });
+
+  it("si KV no responde, sigue sin disyuntor (el presupuesto del DO sigue mandando)", async () => {
+    mockGroq(() => sseGroq(["ok"]));
+    const kvRoto = {
+      get: async () => {
+        throw new Error("KV caído");
+      },
+      put: async () => {
+        throw new Error("KV caído");
+      },
+    } as unknown as KVNamespace;
+    const r = await primeraRespuesta(cadena(), peticion, { ...deps(), kv: kvRoto });
+    expect(r?.proveedor.id).toBe("m/uno");
+  });
+
+  it("cuota mal configurada (no numérica o ≤ 0) → 0: ningún modelo (fail-closed)", async () => {
+    for (const cuota of ["", "abc", "-5"]) expect(depsCadena({ ...env, CUOTA_TOKENS_DIA: cuota }).cuota, cuota).toBe(0);
+    expect(depsCadena(env).cuota).toBe(50_000);
+    const llamadas = mockGroq(() => sseGroq(["ok"]));
+    expect(await primeraRespuesta(cadena(), peticion, { ...deps(), cuota: 0 })).toBeNull();
     expect(llamadas).toHaveLength(0);
   });
 

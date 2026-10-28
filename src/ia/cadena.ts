@@ -22,6 +22,17 @@ async function abrirDisyuntor(kv: KVNamespace, id: string, retryAfter: string | 
   log("disyuntor_abierto", { modelo: id, segundos });
 }
 
+// Si KV no responde, el disyuntor se da por cerrado: lo que de verdad pone el límite es el
+// presupuesto del DO, y una caída de KV no debe tumbar la respuesta con un 503
+async function disyuntorAbierto(kv: KVNamespace, id: string): Promise<boolean> {
+  try {
+    return (await kv.get(`caido:${id}`)) !== null;
+  } catch (err) {
+    log("disyuntor_ilegible", { modelo: id, error: String(err) });
+    return false;
+  }
+}
+
 // Chain of Responsibility: el primer modelo con cuota que responda. null = modo degradado
 export async function primeraRespuesta(
   proveedores: LlmProvider[],
@@ -29,7 +40,7 @@ export async function primeraRespuesta(
   deps: DepsCadena
 ): Promise<{ proveedor: LlmProvider; respuesta: Response } | null> {
   for (const prov of proveedores) {
-    if (await deps.kv.get(`caido:${prov.id}`)) continue;
+    if (await disyuntorAbierto(deps.kv, prov.id)) continue;
     let usados: number;
     try {
       usados = await deps.leerTokens(prov.id);
@@ -66,6 +77,8 @@ export function construirCadena(env: Env): LlmProvider[] {
     .map((m) => proveedorGroq(apiKey, m));
 }
 
+// Una cuota ilegible sería NaN, y `usados >= NaN` nunca se cumple: IA sin límite. Mejor 0 (fail-closed)
 export function depsCadena(env: Env): DepsCadena {
-  return { kv: env.KV, cuota: parseInt(env.CUOTA_TOKENS_DIA, 10), leerTokens: (m) => tokensUsados(env, m) };
+  const cuota = parseInt(env.CUOTA_TOKENS_DIA, 10);
+  return { kv: env.KV, cuota: Number.isFinite(cuota) && cuota > 0 ? cuota : 0, leerTokens: (m) => tokensUsados(env, m) };
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { leerJson } from "../src/http/util";
+import { claveIp, leerJson } from "../src/http/util";
 
 const conCuerpo = (trozos: string[]) => {
   const codificador = new TextEncoder();
@@ -36,5 +36,21 @@ describe("leerJson", () => {
     expect(await leerJson(conCuerpo(["{roto"]))).toBeNull();
     const grande = new Request("https://webninja.fyi/x", { method: "POST", headers: { "content-length": "99999" }, body: "{}" });
     expect(await leerJson(grande)).toBeNull();
+  });
+});
+
+describe("claveIp", () => {
+  it("IPv4 tal cual", () => {
+    expect(claveIp("203.0.113.7")).toBe("203.0.113.7");
+  });
+
+  it("IPv6 por su /64: un cliente suele tener el bloque entero", () => {
+    expect(claveIp("2001:db8:abcd:12:1:2:3:4")).toBe("2001:db8:abcd:12::/64");
+    expect(claveIp("2001:DB8:ABCD:0012::9")).toBe("2001:db8:abcd:12::/64");
+    expect(claveIp("2001:db8::1")).toBe("2001:db8:0:0::/64");
+  });
+
+  it("IPv4 mapeada en IPv6 → la IPv4", () => {
+    expect(claveIp("::ffff:203.0.113.7")).toBe("203.0.113.7");
   });
 });

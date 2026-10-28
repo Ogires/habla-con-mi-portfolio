@@ -57,4 +57,20 @@ export function rechazoCsrf(request: Request): Response | null {
   return null;
 }
 
-export const ip = (request: Request) => request.headers.get("cf-connecting-ip") ?? "0.0.0.0";
+// IPv6: un cliente suele tener un /64 entero; contar por dirección permitiría saltarse los límites
+// cambiando de IP dentro de su bloque
+export function claveIp(ip: string): string {
+  const mapeada = /^::ffff:(\d{1,3}(?:\.\d{1,3}){3})$/i.exec(ip);
+  if (mapeada) return mapeada[1];
+  if (!ip.includes(":")) return ip;
+  const [cabeza, cola] = ip.toLowerCase().split("::");
+  const a = cabeza ? cabeza.split(":") : [];
+  const b = cola ? cola.split(":") : [];
+  const grupos = [...a, ...Array<string>(Math.max(0, 8 - a.length - b.length)).fill("0"), ...b];
+  return `${grupos
+    .slice(0, 4)
+    .map((g) => parseInt(g, 16).toString(16))
+    .join(":")}::/64`;
+}
+
+export const claveCliente = (request: Request) => claveIp(request.headers.get("cf-connecting-ip") ?? "0.0.0.0");

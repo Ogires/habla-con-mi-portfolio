@@ -99,4 +99,33 @@ describe("POST /api/pregunta", () => {
       vi.useRealTimers();
     }
   });
+
+  it("dos IPv6 del mismo /64 comparten el límite por minuto", async () => {
+    vi.useFakeTimers({ toFake: ["Date"], now: Date.UTC(2026, 9, 26, 13, 0, 30) });
+    try {
+      for (let i = 0; i < 10; i++) expect((await preguntar({ pregunta: "¿Cuánto cobra?" }, `2001:db8:1:2::${i + 1}`)).status).toBe(200);
+      expect((await preguntar({ pregunta: "¿Cuánto cobra?" }, "2001:db8:1:2:ffff::1")).status).toBe(429);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("la 21.ª pregunta con IA del día desde la misma IP → fuentes sin IA", async () => {
+    const llamadas = mockGroq(() => sseGroq(["Usa un Durable Object [1]."]));
+    const ipFija = nuevaIp();
+    try {
+      for (let i = 0; i < 21; i++) {
+        // un minuto nuevo cada 10 preguntas para no chocar con el límite por minuto; mismo día UTC
+        vi.useFakeTimers({ toFake: ["Date"], now: Date.UTC(2026, 9, 27, 10, Math.floor(i / 10), 30) });
+        const ev = await leerEventos(await preguntar({ pregunta: "¿Usa Durable Objects?" }, ipFija));
+        if (i < 20) continue;
+        expect(ev[0].datos.length).toBeGreaterThan(0);
+        expect(ev.find((e) => e.evento === "texto")?.datos.t).toContain("Por hoy ya has gastado tus preguntas con IA");
+        expect(ev.at(-1)?.datos.degradado).toBe(true);
+      }
+      expect(llamadas).toHaveLength(20);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });

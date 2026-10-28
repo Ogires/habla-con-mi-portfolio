@@ -6,12 +6,12 @@ import { esPreguntaPrivada, RESPUESTAS } from "../dominio/respuestas";
 import { recortar } from "../dominio/texto";
 import { validarEntrada } from "../dominio/validacion";
 import { recuperadorCloudflare, recuperar, type Recuperador } from "../busqueda/recuperador";
-import { contarPregunta, limitar, sumarTokens } from "../contadores/uso";
+import { contarPregunta, cupoIa, limitar, sumarTokens } from "../contadores/uso";
 import { construirCadena, depsCadena, primeraRespuesta, type DepsCadena } from "../ia/cadena";
 import type { LlmProvider } from "../ia/proveedor";
 import { CABECERAS_SSE, streamRespuesta, type Esperar, type FinRespuesta, type FuenteEvento } from "../ia/stream";
 import { leerFragmentos } from "../repos/fragmentos";
-import { ip, json, leerJson } from "../http/util";
+import { claveCliente, json, leerJson } from "../http/util";
 
 const MAX_TOKENS = 700;
 
@@ -21,7 +21,8 @@ export interface DepsPregunta {
   proveedores: LlmProvider[];
   cadena: DepsCadena;
   umbral: number;
-  limitar(ip: string): Promise<{ permitido: boolean; retryAfter: number }>;
+  limitar(clave: string): Promise<{ permitido: boolean; retryAfter: number }>;
+  cupoIa(clave: string): Promise<{ permitido: boolean; retryAfter: number }>;
   sumarTokens(modelo: string, n: number): Promise<unknown>;
   contarPregunta(): Promise<unknown>;
 }
@@ -33,7 +34,8 @@ export function depsDesdeEnv(env: Env): DepsPregunta {
     proveedores: construirCadena(env),
     cadena: depsCadena(env),
     umbral: Number(env.UMBRAL_COSENO),
-    limitar: (ipCliente) => limitar(env, ipCliente),
+    limitar: (clave) => limitar(env, clave),
+    cupoIa: (clave) => cupoIa(env, clave),
     sumarTokens: (modelo, n) => sumarTokens(env, modelo, n),
     contarPregunta: () => contarPregunta(env),
   };
@@ -53,11 +55,23 @@ const sse = (cuerpo: ReadableStream<Uint8Array>) => new Response(cuerpo, { heade
 const fija = (texto: string, fuentes: FuenteEvento[] = [], fin: Partial<FinRespuesta> = {}) =>
   sse(streamRespuesta({ fuentes, textoFijo: texto, alTerminar: async () => finSimple(fin) }));
 
+// Solo gasta cupo lo que de verdad va a llamar a Groq. Si el contador no responde, sin IA (fail-closed)
+async function hayCupoIa(deps: DepsPregunta, cliente: string): Promise<boolean> {
+  if (!deps.proveedores.length) return true;
+  try {
+    return (await deps.cupoIa(cliente)).permitido;
+  } catch (err) {
+    console.error(JSON.stringify({ evento: "cupo_ilegible", error: String(err) }));
+    return false;
+  }
+}
+
 export async function preguntar(request: Request, deps: DepsPregunta, esperar?: Esperar): Promise<Response> {
   const entrada = validarEntrada(await leerJson(request));
   if (!entrada) return json({ error: "validacion", mensaje: RESPUESTAS.validacion }, 400);
 
-  const rl = await deps.limitar(ip(request));
+  const cliente = claveCliente(request);
+  const rl = await deps.limitar(cliente);
   if (!rl.permitido) return json({ error: "limite", mensaje: RESPUESTAS.limite, retryAfter: rl.retryAfter }, 429, { "retry-after": String(rl.retryAfter) });
   esperar?.(deps.contarPregunta().catch(() => {}));
 
@@ -81,6 +95,7 @@ export async function preguntar(request: Request, deps: DepsPregunta, esperar?: 
   const paraPrompt = fragmentos.map((f, i) => ({ n: i + 1, titulo: f.titulo, texto: f.texto }));
   const mensajes = construirMensajes({ pregunta: entrada.pregunta, historial: entrada.historial, fragmentos: paraPrompt, nonce: nuevoNonce() });
 
+  if (!(await hayCupoIa(deps, cliente))) return fija(RESPUESTAS.cupo, fuentes, { degradado: true });
   const r = await primeraRespuesta(deps.proveedores, { mensajes, maxTokens: MAX_TOKENS }, deps.cadena);
   if (!r) return fija(RESPUESTAS.degradado, fuentes, { degradado: true });
 

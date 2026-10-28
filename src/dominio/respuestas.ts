@@ -7,6 +7,7 @@ export const RESPUESTAS = {
   sinFuentes: `${FRASE_NO_APARECE} Puedes preguntárselo directamente por LinkedIn.`,
   privada: "Eso pregúntaselo a Sergio por LinkedIn.",
   degradado: "Mi cerebro de IA está de descanso, pero esto es lo que he encontrado en el portfolio:",
+  cupo: "Por hoy ya has gastado tus preguntas con IA, pero esto es lo que he encontrado en el portfolio:",
   vacia: "No he sabido responder a eso. Prueba a reformular la pregunta.",
   limite: "Demasiadas preguntas seguidas. Espera un minuto.",
   validacion: "La pregunta debe tener entre 3 y 400 caracteres.",

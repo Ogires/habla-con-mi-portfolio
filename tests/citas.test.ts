@@ -34,4 +34,10 @@ describe("analizarCitas", () => {
   it("la frase de 'no aparece' no es sinFuente", () => {
     expect(analizarCitas(FRASE_NO_APARECE, F).sinFuente).toBe(false);
   });
+
+  it("muchas citas seguidas no disparan el backtracking (ReDoS)", () => {
+    const inicio = performance.now();
+    analizarCitas("[1]   ".repeat(13) + "x", F);
+    expect(performance.now() - inicio).toBeLessThan(100);
+  });
 });

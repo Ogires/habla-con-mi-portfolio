@@ -10,7 +10,9 @@ export interface AnalisisCitas {
 }
 
 const CITA = /\[(\d{1,2})\]/g;
-const SOLO_CITAS = /^(\s*\[\d{1,2}\]\s*)+$/;
+// Sin \s* al final del grupo: los espacios entre dos citas solo pueden ir a un sitio. Con
+// /^(\s*\[n\]\s*)+$/ el reparto era ambiguo y "[1]   " × 13 + "x" tardaba 1 s (ReDoS)
+const SOLO_CITAS = /^(?:\s*\[\d{1,2}\])+\s*$/;
 
 // Frases; una "frase" que solo tiene citas ("... limit. [1]") se pega a la anterior
 function frases(texto: string): string[] {

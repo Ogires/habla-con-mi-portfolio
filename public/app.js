@@ -62,6 +62,8 @@ function crearTurno(pregunta) {
     for (const s of segs) {
       if (s.tipo === "texto") padre.append(document.createTextNode(s.valor));
       else if (s.tipo === "negrita") padre.append(el("strong", null, s.valor));
+      else if (s.tipo === "cursiva") padre.append(el("em", null, s.valor));
+      else if (s.tipo === "codigo") padre.append(el("code", null, s.valor));
       else if (fuentes.some((f) => f.n === s.n)) {
         const a = el("a", "cita", `[${s.n}]`);
         a.href = `#${anclaFuente(s.n)}`;

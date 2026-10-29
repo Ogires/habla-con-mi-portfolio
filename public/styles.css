@@ -173,6 +173,15 @@ h2 {
 
 .turno__respuesta ul { padding-left: 1.25rem; }
 
+.turno__respuesta code {
+  padding: 0 0.25em;
+  font-family: var(--f-mono);
+  font-size: 0.875em;
+  background: var(--chapa);
+  border: 1px solid var(--linea);
+  border-radius: var(--radio);
+}
+
 .turno__buscando {
   color: var(--tinta-suave);
   font-family: var(--f-mono);

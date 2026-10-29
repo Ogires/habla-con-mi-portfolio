@@ -32,7 +32,8 @@
     "GROQ_MODEL_RESERVA_2": "qwen/qwen3.8-27b",
     // Por modelo: 3 × 50K = 150K/día; deja ~450K para Interview Fight Club (misma organización de Groq)
     "CUOTA_TOKENS_DIA": "50000",
-    "UMBRAL_COSENO": "0.45",
+    // npm run calibrar (2026-10-29): la peor pregunta del portfolio da 0,530 y la mejor de fuera 0,470
+    "UMBRAL_COSENO": "0.50",
     "URL_LINKEDIN": "https://www.linkedin.com/in/sergio-bonet-plasencia-99427871"
   }
 }

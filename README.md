@@ -8,7 +8,10 @@ Un chat con IA que responde sobre el trabajo de Sergio (Ogires) a partir de sus 
 
 **▶ Pregunta en <https://webninja.fyi>**
 
-<!-- CAPTURA: se añade tras la primera ingesta real (Tarea 16) -->
+<p align="center">
+  <img src="docs/captura-chat.png" alt="Respuesta a «¿Usa Durable Objects?» con citas [2] y [3] y las 5 fuentes enlazadas" width="640"/>
+  <img src="docs/captura-galeria-movil.png" alt="Galería de la factoría en móvil: Excusotron, Frikile e Interview Fight Club" width="220"/>
+</p>
 
 ## Qué hace
 
@@ -76,7 +79,7 @@ ingesta local → troceo → bge-m3 → Vectorize + FTS5 → RRF → Groq → ci
 4. **Incremental por hash.** El hash de cada fuente cubre el texto, el título, la URL, el tipo y la versión del troceo: solo se reindexan las fuentes en las que cambia algo de eso. Los fragmentos que ya no existen se borran.
 5. **Embeddings** con `@cf/baai/bge-m3` (1024 dimensiones) a través de `getPlatformProxy` de wrangler con bindings remotos: usa el login de wrangler, sin token nuevo.
 6. **Índices.** El vector va a Vectorize (`portfolio-bge-m3`, coseno) y el texto a D1, con una tabla FTS5 (`unicode61 remove_diacritics 2`) para la búsqueda por palabras.
-7. **En cada pregunta**, las dos búsquedas se fusionan con **Reciprocal Rank Fusion** (`Σ 1 / (60 + posición)`). Los resultados vectoriales por debajo de `UMBRAL_COSENO` no cuentan: es lo que permite decir "no lo sé". La búsqueda por palabras no tiene umbral: basta con que coincida un término. Se leen de D1 todos los candidatos y se queda con los 5 primeros que existen, así que un vector huérfano (de una ingesta a medias) no quita sitio a uno real.
+7. **En cada pregunta**, las dos búsquedas se fusionan con **Reciprocal Rank Fusion** (`Σ 1 / (60 + posición)`). Los resultados vectoriales por debajo de `UMBRAL_COSENO` (0,50, calibrado con `npm run calibrar`) no cuentan: es lo que permite decir "no lo sé". La búsqueda por palabras no tiene umbral: basta con que coincida un término. Se leen de D1 todos los candidatos y se queda con los 5 primeros que existen, así que un vector huérfano (de una ingesta a medias) no quita sitio a uno real.
 8. **Groq** recibe esos fragmentos delimitados por un nonce en el mensaje del usuario (no en el de sistema) y responde con citas `[n]`, que el servidor valida al terminar.
 
 ## Seguridad de un RAG público
@@ -136,9 +139,9 @@ Los límites de Groq son por organización y modelo, y [Interview Fight Club](ht
 
 - El portfolio tiene su propio presupuesto: `CUOTA_TOKENS_DIA` = 50.000 tokens por modelo (150K entre los tres modelos de la cadena), en `vars`. Cada modelo se da por agotado al 90 %. De los 600K diarios de los tres modelos quedan ~450K para Interview Fight Club.
 - El contador de tokens es un Durable Object por modelo y día UTC (Groq reinicia las cuotas en UTC). Si no se puede leer, *fail-closed*: modo degradado, nunca IA sin límite.
-- Prompt compacto: hasta 5 fragmentos de ~300 palabras, `max_tokens: 700` (en gpt-oss incluye el razonamiento), `reasoning_effort: low`. La estimación de diseño es de ~3K tokens por pregunta; el consumo real se mide en producción.
+- Prompt compacto: hasta 5 fragmentos de ~300 palabras, `max_tokens: 700` (en gpt-oss incluye el razonamiento), `reasoning_effort: low`. En producción, una pregunta gasta de media ~1,8K tokens (de 1,3K a 2,1K en las primeras medidas); el diseño estimaba ~3K.
 - Por encima del presupuesto entra el modo degradado: el visitante sigue viendo las fuentes.
-- Con ~3K tokens por respuesta, 150K diarios dan para unas 50 respuestas con IA. Por eso cada IP tiene un tope de 20 al día (Durable Object, exacto, día UTC): sin él, una sola IP vaciaba el presupuesto en unos minutos.
+- Con ~1,8K tokens por respuesta y el corte del 90 %, el presupuesto da para unas 75 respuestas con IA al día entre los tres modelos. Por eso cada IP tiene un tope de 20 al día (Durable Object, exacto, día UTC): sin él, una sola IP vaciaba el presupuesto en unos minutos.
 
 Límites por IP, con la IPv6 contada por su /64 (cambiar de dirección dentro del propio bloque no da preguntas nuevas):
 
@@ -158,7 +161,7 @@ Errores en JSON: `400` "La pregunta debe tener entre 3 y 400 caracteres.", `403`
 
 ```bash
 npm install
-npm test           # 127 tests sobre el runtime real de Workers (D1 con FTS5 y Durable Objects incluidos)
+npm test           # 129 tests sobre el runtime real de Workers (D1 con FTS5 y Durable Objects incluidos)
 npm run typecheck
 npx wrangler d1 migrations apply habla-con-mi-portfolio --local
 npm run dev        # wrangler dev: AI y Vectorize son los remotos (requiere wrangler login)
@@ -185,6 +188,7 @@ npm run ingesta
 npx wrangler d1 migrations apply habla-con-mi-portfolio --remote
 npx wrangler secret put GROQ_API_KEY
 npm run ingesta
+npm run calibrar   # puntuación de preguntas dentro y fuera del portfolio, para revisar UMBRAL_COSENO
 npm run deploy     # https://webninja.fyi (www.webninja.fyi redirige a la raíz)
 ```
 
@@ -266,6 +270,19 @@ D1 guarda el hash de cada fuente, por eso va después de Vectorize: si algo fall
 **Qué se hizo.** El stream normaliza `【n】` y `【n†…】` a `[n]` antes de enviar cada delta, así que el navegador y la validación de citas ven lo mismo. Como una cita puede llegar partida entre dos deltas (`"D1 【"` + `"1】"`), lo que va desde un `【` sin cerrar se retiene hasta el siguiente, con un tope de 30 caracteres para no frenar el stream si no era una cita. El prompt pide además corchetes simples con un ejemplo.
 
 **Lo que se asume.** Solo se normalizan esas dos formas. Si el modelo inventa otra, sus citas no se reconocen y la respuesta sale con el aviso "verifícalo", como antes de este arreglo.
+
+### 2026-10-29 · Puesta en producción
+
+**Qué pasó.** El umbral de partida (0,45) era una estimación. Con el índice real, `npm run calibrar` dio a la peor pregunta que el portfolio sí cubre ("¿Con qué stack trabaja?") 0,530, y a la mejor de fuera ("¿Toca el xilófono?") 0,470: con 0,45, "xilófono" y "receta de paella" entraban por la búsqueda vectorial y llegaban a Groq. Además, gpt-oss escribe `*cursiva*` y `` `código` `` y el navegador los pintaba con los símbolos.
+
+**Qué se hizo.**
+- `UMBRAL_COSENO` a 0,50, entre los dos grupos. Ahora "¿Toca el xilófono?" no encuentra fragmentos y responde "Eso no aparece…" sin llamar a la IA.
+- El render admite cursiva y código en línea, montados igual con `textContent`.
+- Verificación en producción: citas con enlaces a GitHub (las 83 anclas existen), respuesta fija para preguntas privadas sin llamar a Groq, inyección ignorada, la 11.ª pregunta del minuto → `429` con `Retry-After`, cabeceras, redirección de `www`, `og:image` de 1200×627 y galería. En la misma prueba, gpt-oss-120b devolvió `429` por su límite de tokens por minuto y la cadena siguió con gpt-oss-20b, como estaba previsto.
+- Tokens medidos con `wrangler tail`: 1.342-2.143 por pregunta, media ~1.775. No hace falta trocear más fino.
+- `wrangler d1 export` no admite bases con tablas FTS5: la búsqueda de datos personales en la D1 de producción se hizo leyendo los fragmentos con una consulta (ningún email, teléfono ni DNI).
+
+**Lo que se asume.** El umbral sale de 14 preguntas y deja poco margen por cada lado (0,03): tras una ingesta grande conviene repetir `npm run calibrar`. La búsqueda por palabras no tiene umbral, así que una pregunta fuera de tema que comparta un término con el corpus llega a Groq, y es el prompt el que responde "Eso no aparece…". Y el modelo puede mezclar dos datos ciertos de fragmentos distintos: en una prueba dijo que Frikile guarda la palabra del día en KV, cuando en KV van las pistas y la palabra está en D1. Por eso cada afirmación lleva su cita.
 
 ## Licencia
 

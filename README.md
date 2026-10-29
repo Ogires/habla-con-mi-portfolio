@@ -46,7 +46,7 @@ Un chat con IA que responde sobre el trabajo de Sergio (Ogires) a partir de sus 
 │ 5. fusión RRF → texto desde D1 → 5 primeros que existen         │
 │      sin fragmentos → "Eso no aparece en el portfolio..."       │
 │ 6. evento "fuentes"                                             │
-│ 7. tope de 20 respuestas con IA al día por IP                   │
+│ 7. tope de 10 respuestas con IA al día por IP                   │
 │ 8. cadena de Groq (presupuesto y disyuntor) → eventos "texto"   │
 │      sin IA → texto fijo + fuentes (modo degradado)             │
 │ 9. validación de citas → evento "fin" (¿truncada?)              │
@@ -95,7 +95,7 @@ Modelo de amenazas completo (OWASP Top 10 for LLM Applications 2025 y OWASP Top 
 | **LLM07** Fuga del system prompt | "Repite tus instrucciones" | El prompt está en el repo ([`src/dominio/prompt.ts`](src/dominio/prompt.ts)) y no tiene secretos |
 | **LLM08** Vectores y embeddings | Envenenar el índice | El Worker no tiene ninguna ruta de escritura en Vectorize ni en D1 |
 | **LLM09** Desinformación | El modelo afirma algo que no está en las fuentes | Citas obligatorias y validadas · umbral de coseno en la búsqueda vectorial (sin ningún fragmento no se llama a Groq) · aviso fijo en la interfaz |
-| **LLM10** Consumo sin límite | Post viral, script o una web ajena que use la API | Pregunta ≤ 400 caracteres, historial ≤ 2 preguntas de 300 · `max_tokens: 700` · rate limit **exacto** de 10 preguntas/min y tope de **20 respuestas con IA al día** por IP, con la IPv6 contada por /64 · presupuesto diario de tokens por modelo en el Durable Object · solo JSON del propio origen (CSRF) |
+| **LLM10** Consumo sin límite | Post viral, script o una web ajena que use la API | Pregunta ≤ 400 caracteres, historial ≤ 2 preguntas de 300 · `max_tokens: 700` · rate limit **exacto** de 10 preguntas/min y tope de **10 respuestas con IA al día** por IP, con la IPv6 contada por /64 · presupuesto diario de tokens por modelo en el Durable Object · solo JSON del propio origen (CSRF) |
 
 No se guardan preguntas ni respuestas. Solo se guardan contadores: los de los límites por IP (ventana de un minuto y de un día) y uno agregado de preguntas por día. `/api/pregunta` solo acepta `application/json` del propio origen: con `Origin` o `Sec-Fetch-Site` de otra web (subdominios de `webninja.fyi` incluidos) responde `403`, y con otro `Content-Type`, `415`. Así ninguna página puede gastar la cuota de IA desde el navegador de sus visitantes. El cuerpo se lee con un tope de 4 KB aunque no traiga `Content-Length`. Todas las respuestas, incluido el stream y los estáticos, llevan CSP `default-src 'self'`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`, `X-Frame-Options: DENY` y `Strict-Transport-Security`. Un error no controlado devuelve un `503` genérico, sin trazas.
 
@@ -137,16 +137,16 @@ Límites del plan Free (los de Cloudflare, verificados el 2026-10-26 en develope
 
 Los límites de Groq son por organización y modelo, y [Interview Fight Club](https://github.com/Ogires/interview-fight-club) usa la misma cuenta. Para que una app no deje sin cuota a la otra:
 
-- El portfolio tiene su propio presupuesto: `CUOTA_TOKENS_DIA` = 50.000 tokens por modelo (150K entre los tres modelos de la cadena), en `vars`. Cada modelo se da por agotado al 90 %. De los 600K diarios de los tres modelos quedan ~450K para Interview Fight Club.
+- El portfolio tiene su propio presupuesto: `CUOTA_TOKENS_DIA` = 100.000 tokens por modelo (300K entre los tres modelos de la cadena), en `vars`. Cada modelo se da por agotado al 90 %. De los 600K diarios de los tres modelos quedan ~300K para Interview Fight Club.
 - El contador de tokens es un Durable Object por modelo y día UTC (Groq reinicia las cuotas en UTC). Si no se puede leer, *fail-closed*: modo degradado, nunca IA sin límite.
 - Prompt compacto: hasta 5 fragmentos de ~300 palabras, `max_tokens: 700` (en gpt-oss incluye el razonamiento), `reasoning_effort: low`. En producción, una pregunta gasta de media ~1,8K tokens (de 1,3K a 2,1K en las primeras medidas); el diseño estimaba ~3K.
 - Por encima del presupuesto entra el modo degradado: el visitante sigue viendo las fuentes.
-- Con ~1,8K tokens por respuesta y el corte del 90 %, el presupuesto da para unas 75 respuestas con IA al día entre los tres modelos. Por eso cada IP tiene un tope de 20 al día (Durable Object, exacto, día UTC): sin él, una sola IP vaciaba el presupuesto en unos minutos.
+- Con ~1,8K tokens por respuesta y el corte del 90 %, el presupuesto da para unas 150 respuestas con IA al día entre los tres modelos. Por eso cada IP tiene un tope de 10 al día (Durable Object, exacto, día UTC): sin él, una sola IP vaciaba el presupuesto en unos minutos.
 
 Límites por IP, con la IPv6 contada por su /64 (cambiar de dirección dentro del propio bloque no da preguntas nuevas):
 
 - **10 preguntas/min** (ventana fija de 60 s, exacta). La 11.ª devuelve `429` "Demasiadas preguntas seguidas. Espera un minuto." con `Retry-After` real.
-- **20 respuestas con IA al día.** Las siguientes muestran las fuentes con "Por hoy ya has gastado tus preguntas con IA, pero esto es lo que he encontrado en el portfolio:". Si el contador no responde, tampoco hay IA (*fail-closed*).
+- **10 respuestas con IA al día.** Las siguientes muestran las fuentes con "Por hoy ya has gastado tus preguntas con IA, pero esto es lo que he encontrado en el portfolio:". Si el contador no responde, tampoco hay IA (*fail-closed*).
 
 ## API
 
@@ -261,7 +261,7 @@ D1 guarda el hash de cada fuente, por eso va después de Vectorize: si algo fall
 
 **Qué se hizo.** Un commit con sus tests por cada grupo; los detalles están en este README y en el historial de git. Resistieron sin cambios: XSS, inyección en la consulta FTS5, redirección abierta, inyección de etiquetas del delimitador y el rate limit concurrente.
 
-**Lo que se asume.** La comprobación del presupuesto y la suma de tokens no son una única operación atómica: varias preguntas simultáneas pueden pasar a la vez el corte del 90 % y pasarse de la cuota en lo que gasten (~3K tokens cada una). Lo amortiguan el margen del 10 % (5K tokens por modelo) y los límites por IP.
+**Lo que se asume.** La comprobación del presupuesto y la suma de tokens no son una única operación atómica: varias preguntas simultáneas pueden pasar a la vez el corte del 90 % y pasarse de la cuota en lo que gasten (~3K tokens cada una). Lo amortiguan el margen del 10 % (10K tokens por modelo desde el 29-oct) y los límites por IP.
 
 ### 2026-10-28 · gpt-oss cita a veces con 【n】
 
@@ -280,6 +280,7 @@ D1 guarda el hash de cada fuente, por eso va después de Vectorize: si algo fall
 - El render admite cursiva y código en línea, montados igual con `textContent`.
 - Verificación en producción: citas con enlaces a GitHub (las 83 anclas existen), respuesta fija para preguntas privadas sin llamar a Groq, inyección ignorada, la 11.ª pregunta del minuto → `429` con `Retry-After`, cabeceras, redirección de `www`, `og:image` de 1200×627 y galería. En la misma prueba, gpt-oss-120b devolvió `429` por su límite de tokens por minuto y la cadena siguió con gpt-oss-20b, como estaba previsto.
 - Tokens medidos con `wrangler tail`: 1.342-2.143 por pregunta, media ~1.775. No hace falta trocear más fino.
+- Para el lanzamiento en LinkedIn, `CUOTA_TOKENS_DIA` sube de 50K a 100K por modelo (unas 150 respuestas con IA al día) y el tope por IP baja de 20 a 10, para que pocas personas no agoten el día. A Interview Fight Club le quedan ~300K.
 - `wrangler d1 export` no admite bases con tablas FTS5: la búsqueda de datos personales en la D1 de producción se hizo leyendo los fragmentos con una consulta (ningún email, teléfono ni DNI).
 
 **Lo que se asume.** El umbral sale de 14 preguntas y deja poco margen por cada lado (0,03): tras una ingesta grande conviene repetir `npm run calibrar`. La búsqueda por palabras no tiene umbral, así que una pregunta fuera de tema que comparta un término con el corpus llega a Groq, y es el prompt el que responde "Eso no aparece…". Y el modelo puede mezclar dos datos ciertos de fragmentos distintos: en una prueba dijo que Frikile guarda la palabra del día en KV, cuando en KV van las pistas y la palabra está en D1. Por eso cada afirmación lleva su cita.

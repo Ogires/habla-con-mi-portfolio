@@ -110,20 +110,20 @@ describe("POST /api/pregunta", () => {
     }
   });
 
-  it("la 21.ª pregunta con IA del día desde la misma IP → fuentes sin IA", async () => {
+  it("la 11.ª pregunta con IA del día desde la misma IP → fuentes sin IA", async () => {
     const llamadas = mockGroq(() => sseGroq(["Usa un Durable Object [1]."]));
     const ipFija = nuevaIp();
     try {
-      for (let i = 0; i < 21; i++) {
+      for (let i = 0; i < 11; i++) {
         // un minuto nuevo cada 10 preguntas para no chocar con el límite por minuto; mismo día UTC
         vi.useFakeTimers({ toFake: ["Date"], now: Date.UTC(2026, 9, 27, 10, Math.floor(i / 10), 30) });
         const ev = await leerEventos(await preguntar({ pregunta: "¿Usa Durable Objects?" }, ipFija));
-        if (i < 20) continue;
+        if (i < 10) continue;
         expect(ev[0].datos.length).toBeGreaterThan(0);
         expect(ev.find((e) => e.evento === "texto")?.datos.t).toContain("Por hoy ya has gastado tus preguntas con IA");
         expect(ev.at(-1)?.datos.degradado).toBe(true);
       }
-      expect(llamadas).toHaveLength(20);
+      expect(llamadas).toHaveLength(10);
     } finally {
       vi.useRealTimers();
     }

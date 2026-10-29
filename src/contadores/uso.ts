@@ -3,7 +3,7 @@ import type { Env } from "../env";
 
 export const LIMITE_POR_MINUTO = 10;
 // LLM10: con ~3K tokens por respuesta, una sola IP vaciaba el presupuesto diario en minutos
-export const LIMITE_IA_POR_DIA = 20;
+export const LIMITE_IA_POR_DIA = 10;
 const DIA_MS = 86_400_000; // la ventana fija de un día coincide con el día UTC
 
 export function limitar(env: Env, clave: string) {

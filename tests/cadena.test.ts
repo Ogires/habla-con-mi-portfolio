@@ -88,7 +88,7 @@ describe("primeraRespuesta", () => {
 
   it("cuota mal configurada (no numérica o ≤ 0) → 0: ningún modelo (fail-closed)", async () => {
     for (const cuota of ["", "abc", "-5"]) expect(depsCadena({ ...env, CUOTA_TOKENS_DIA: cuota }).cuota, cuota).toBe(0);
-    expect(depsCadena(env).cuota).toBe(50_000);
+    expect(depsCadena(env).cuota).toBe(100_000);
     const llamadas = mockGroq(() => sseGroq(["ok"]));
     expect(await primeraRespuesta(cadena(), peticion, { ...deps(), cuota: 0 })).toBeNull();
     expect(llamadas).toHaveLength(0);

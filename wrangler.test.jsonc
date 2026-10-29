@@ -16,7 +16,7 @@
     "GROQ_MODEL": "openai/gpt-oss-120b",
     "GROQ_MODEL_RESERVA_1": "openai/gpt-oss-20b",
     "GROQ_MODEL_RESERVA_2": "qwen/qwen3.8-27b",
-    "CUOTA_TOKENS_DIA": "50000",
+    "CUOTA_TOKENS_DIA": "100000",
     "UMBRAL_COSENO": "0.50",
     "URL_LINKEDIN": "https://www.linkedin.com/in/ejemplo"
   }

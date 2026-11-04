@@ -17,7 +17,7 @@ Es la pieza que cierra el arco técnico de la factoría: texto (Excusotron), per
 - Chat RAG en streaming con citas `[n]` que enlazan a la fuente.
 - Panel "¿De dónde sale esta respuesta?" con los 5 fragmentos recuperados y su origen (vector, palabras clave o ambos).
 - Preguntas de seguimiento (2 turnos de historial en el cliente).
-- Galería de las **4 apps lanzadas**: Excusotron, Frikile, Interview Fight Club y Last listened for NotebookLM. Botón "Pregúntale por esta app" en cada tarjeta.
+- Galería de las **apps lanzadas**: Excusotron, Frikile, Interview Fight Club, Last listened for NotebookLM y Ficha de Rol. Botón "Pregúntale por esta app" en cada tarjeta.
 - Ingesta local por script (`npm run ingesta`), incremental por hash.
 - Rate limit y presupuesto exactos (Durable Object `Contador`, reutilizado de Interview Fight Club).
 
@@ -27,7 +27,7 @@ Es la pieza que cierra el arco técnico de la factoría: texto (Excusotron), per
 
 | Fuente | Dónde está | ¿Versionada en el repo? |
 |---|---|---|
-| READMEs y `docs/plans/*.md` de los 4 repos de la galería | GitHub (públicos) | La lista sí (`data/fuentes.json`); el contenido se descarga en la ingesta |
+| READMEs y `docs/plans/*.md` de los repos de la galería | GitHub (públicos) | La lista sí (`data/fuentes.json`); el contenido se descarga en la ingesta |
 | `data/apps.json` (galería) | Repo | Sí |
 | Perfil de LinkedIn | `textos-perfil.md` (carpeta local) | **No** (`fuentes.local.json`, gitignored) |
 | CV público | `cv-publico.md` preparado a mano, sin datos de contacto | **No** |

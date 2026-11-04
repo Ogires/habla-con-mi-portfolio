@@ -50,6 +50,17 @@
       "repo": "https://github.com/Ogires/last-listened-for-notebooklm",
       "lanzada": "2026-10",
       "color": "#3b5bdb"
+    },
+    {
+      "id": "ficha-de-rol",
+      "nombre": "Ficha de Rol",
+      "frase": "Convierte tu CV en una ficha de personaje de rol: reglas para el nivel y los atributos, e IA para la historia y el retrato.",
+      "stack": ["Cloudflare Workers", "Workers AI", "Durable Objects", "KV"],
+      "tipo": "web",
+      "demo": "https://rol.webninja.fyi",
+      "repo": "https://github.com/Ogires/ficha-de-rol",
+      "lanzada": "2026-11",
+      "color": "#d9b44a"
     }
   ]
 }

@@ -21,7 +21,7 @@ Un chat con IA que responde sobre el trabajo de Sergio (Ogires) a partir de sus 
 - El panel **"¿De dónde sale esta respuesta?"** enseña el extracto de cada fragmento y si lo encontró la búsqueda vectorial, la de palabras clave o las dos.
 - Admite preguntas de seguimiento: el navegador guarda en memoria las 2 últimas preguntas (solo las preguntas: el servidor no acepta respuestas escritas por el cliente).
 - Si la búsqueda no encuentra ningún fragmento relevante, responde "Eso no aparece en el portfolio de Sergio." sin llamar a la IA. Si encuentra algo pero no cubre la pregunta, el prompt obliga al modelo a responder esa misma frase.
-- La **galería** muestra las 4 apps lanzadas (Excusotron, Frikile, Interview Fight Club y Last listened for NotebookLM). Cada tarjeta tiene un botón "Pregúntale por esta app".
+- La **galería** muestra las apps lanzadas (Excusotron, Frikile, Interview Fight Club, Last listened for NotebookLM y Ficha de Rol). Cada tarjeta tiene un botón "Pregúntale por esta app".
 
 *Respuestas generadas por IA a partir de los documentos enlazados. Las citas están para que lo compruebes.*
 
@@ -73,7 +73,7 @@ Decisiones de diseño:
 ingesta local → troceo → bge-m3 → Vectorize + FTS5 → RRF → Groq → citas validadas
 ```
 
-1. **Ingesta local** (`npm run ingesta`, nunca en CI). Las fuentes públicas son los README y los documentos de diseño de los 4 repos de la galería ([`data/fuentes.json`](data/fuentes.json)), descargados con `gh api`, más la propia galería ([`public/apps.json`](public/apps.json)). Las privadas (perfil, CV público sin datos de contacto y el texto de los posts de LinkedIn) se configuran en un fichero local ignorado por git. De las guías de los posts solo entra el bloque del post, nunca las instrucciones.
+1. **Ingesta local** (`npm run ingesta`, nunca en CI). Las fuentes públicas son los README y los documentos de diseño de los repos de la galería ([`data/fuentes.json`](data/fuentes.json)), descargados con `gh api`, más la propia galería ([`public/apps.json`](public/apps.json)). Las privadas (perfil, CV público sin datos de contacto y el texto de los posts de LinkedIn) se configuran en un fichero local ignorado por git. De las guías de los posts solo entra el bloque del post, nunca las instrucciones.
 2. **Filtro de datos personales.** Emails (también ofuscados: `[at]`, "arroba"), teléfonos (también internacionales), DNI/NIE, IBAN y direcciones postales. Un solo hallazgo **aborta toda la ingesta** antes de subir nada, e indica fuente y línea sin mostrar el dato. Dos fuentes con el mismo id también la abortan.
 3. **Troceo** por encabezados markdown en fragmentos de ~300 palabras con solape de 50. Cada fragmento lleva título "Fuente · encabezado" y una URL que, en GitHub, apunta al ancla del encabezado. Una sección de menos de 40 palabras se funde con la siguiente, cuyo encabezado pasa al texto para que se pueda seguir buscando por él.
 4. **Incremental por hash.** El hash de cada fuente cubre el texto, el título, la URL, el tipo y la versión del troceo: solo se reindexan las fuentes en las que cambia algo de eso. Los fragmentos que ya no existen se borran.

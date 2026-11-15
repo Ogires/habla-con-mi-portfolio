@@ -21,7 +21,7 @@ Un chat con IA que responde sobre el trabajo de Sergio (Ogires) a partir de sus 
 - El panel **"¿De dónde sale esta respuesta?"** enseña el extracto de cada fragmento y si lo encontró la búsqueda vectorial, la de palabras clave o las dos.
 - Admite preguntas de seguimiento: el navegador guarda en memoria las 2 últimas preguntas (solo las preguntas: el servidor no acepta respuestas escritas por el cliente).
 - Si la búsqueda no encuentra ningún fragmento relevante, responde "Eso no aparece en el portfolio de Sergio." sin llamar a la IA. Si encuentra algo pero no cubre la pregunta, el prompt obliga al modelo a responder esa misma frase.
-- La **galería** muestra las apps lanzadas (Excusotron, Frikile, Interview Fight Club, Last listened for NotebookLM y Ficha de Rol). Cada tarjeta tiene un botón "Pregúntale por esta app".
+- La **galería** muestra las apps lanzadas (Excusotron, Frikile, Interview Fight Club, Last listened for NotebookLM, Ficha de Rol y Horóscopo de Bardo). Cada tarjeta tiene un botón "Pregúntale por esta app".
 
 *Respuestas generadas por IA a partir de los documentos enlazados. Las citas están para que lo compruebes.*
 

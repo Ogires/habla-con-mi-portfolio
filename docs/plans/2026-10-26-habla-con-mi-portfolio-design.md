@@ -17,7 +17,7 @@ Es la pieza que cierra el arco técnico de la factoría: texto (Excusotron), per
 - Chat RAG en streaming con citas `[n]` que enlazan a la fuente.
 - Panel "¿De dónde sale esta respuesta?" con los 5 fragmentos recuperados y su origen (vector, palabras clave o ambos).
 - Preguntas de seguimiento (2 turnos de historial en el cliente).
-- Galería de las **apps lanzadas**: Excusotron, Frikile, Interview Fight Club, Last listened for NotebookLM y Ficha de Rol. Botón "Pregúntale por esta app" en cada tarjeta.
+- Galería de las **apps lanzadas**: Excusotron, Frikile, Interview Fight Club, Last listened for NotebookLM, Ficha de Rol y Horóscopo de Bardo. Botón "Pregúntale por esta app" en cada tarjeta.
 - Ingesta local por script (`npm run ingesta`), incremental por hash.
 - Rate limit y presupuesto exactos (Durable Object `Contador`, reutilizado de Interview Fight Club).
 

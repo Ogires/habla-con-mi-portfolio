@@ -61,6 +61,17 @@
       "repo": "https://github.com/Ogires/ficha-de-rol",
       "lanzada": "2026-11",
       "color": "#d9b44a"
+    },
+    {
+      "id": "horoscopo-de-bardo",
+      "nombre": "Horóscopo de Bardo",
+      "frase": "El horóscopo diario de doce lenguajes de programación, escrito por un bardo pesimista: web, API pública, tarjeta para tu README de GitHub y canal de Telegram.",
+      "stack": ["Cloudflare Workers", "D1", "Cron Triggers", "GLM-5.3"],
+      "tipo": "web",
+      "demo": "https://bardo.webninja.fyi",
+      "repo": "https://github.com/Ogires/horoscopo-de-bardo",
+      "lanzada": "2026-11",
+      "color": "#9e1b1b"
     }
   ]
 }
